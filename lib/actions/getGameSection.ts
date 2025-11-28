@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { Langue } from "@/lib/generated/prisma";
 
 export async function getGameSection() {
   try {
@@ -48,7 +49,7 @@ export async function getGameSection() {
           stageId: jeu.stageId,
           statusJeu: 'CURRENT',
           niveauJeu: jeu.niveau,
-          langue: user.langue as any || 'FR',
+          langue: (user.langue as Langue) || Langue.FR,
           numOrder: jeu.numOrder,
           score: 0,
           isFinished: false

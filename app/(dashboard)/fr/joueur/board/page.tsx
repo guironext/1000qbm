@@ -80,8 +80,7 @@ const BoardPage = () => {
         // Create initial palmares
         const result = await createInitialPalmares(
           data.user.id,
-          data.stage.id,
-          data.user.langue || 'FR'
+          data.stage.id
         );
         
         if (result.success && result.jeuId) {

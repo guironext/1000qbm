@@ -218,7 +218,7 @@ const HeaderJeu = () => {
                   {/* Recent Achievements */}
                   {userData?.palmares
                     ?.slice(0, 3)
-                    .map((palmares: Palmares, index: number) => (
+                    .map((palmares: Palmares) => (
                       <div
                         key={palmares.id}
                         className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"

@@ -2,11 +2,8 @@
 
 import {
   ArrowBigDownDash,
-  ArrowBigRightDashIcon,
   ContainerIcon,
-  DrumIcon,
   Home,
-  PocketKnifeIcon,
   StoreIcon,
 } from "lucide-react";
 import Link from "next/link";

@@ -90,7 +90,7 @@ export async function getBoardPageData() {
   };
 }
 
-export async function createInitialPalmares(userId: string, stageId: string, userLangue: string) {
+export async function createInitialPalmares(userId: string, stageId: string) {
   try {
     // Get the stage
     const stage = await prisma.stage.findUnique({
@@ -132,7 +132,7 @@ export async function createInitialPalmares(userId: string, stageId: string, use
     }
 
     // Create palmares
-    const palmares = await prisma.palmares.create({
+    await prisma.palmares.create({
       data: {
         userId,
         stageId: stage.id,

@@ -23,7 +23,6 @@ import {
   Activity,
   Crown,
   Star,
-  Sparkles,
   Target,
   Zap,
   Upload,
@@ -305,7 +304,7 @@ const AdminDashboard = () => {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
-          } catch (parseError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         } else {
@@ -313,7 +312,7 @@ const AdminDashboard = () => {
             const errorText = await response.text();
             console.error('Non-JSON error response:', errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-          } catch (textError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
@@ -348,7 +347,7 @@ const AdminDashboard = () => {
           try {
             const error = await response.json();
             errorMessage = error.details || error.error || errorMessage;
-          } catch (parseError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         } else {
@@ -356,7 +355,7 @@ const AdminDashboard = () => {
             const errorText = await response.text();
             console.error('Non-JSON error response:', errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-          } catch (textError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
@@ -410,7 +409,7 @@ const AdminDashboard = () => {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
-          } catch (parseError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         } else {
@@ -418,7 +417,7 @@ const AdminDashboard = () => {
             const errorText = await response.text();
             console.error('Non-JSON error response:', errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-          } catch (textError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
@@ -498,7 +497,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         toast.success('Section créée avec succès!');
         await loadDashboardData();
         setIsAddSectionDialogOpen(false);
@@ -511,7 +510,7 @@ const AdminDashboard = () => {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
-          } catch (parseError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         } else {
@@ -519,7 +518,7 @@ const AdminDashboard = () => {
             const errorText = await response.text();
             console.error('Non-JSON error response:', errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-          } catch (textError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
@@ -574,7 +573,7 @@ const AdminDashboard = () => {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
-          } catch (parseError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         } else {
@@ -582,7 +581,7 @@ const AdminDashboard = () => {
             const errorText = await response.text();
             console.error('Non-JSON error response:', errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-          } catch (textError) {
+          } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
