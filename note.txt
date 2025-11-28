@@ -1,0 +1,186 @@
+
+
+ngrok http --url=robin-prime-goose.ngrok-free.app 3000 //DO NOT USE IT
+
+1. Run 'prisma dev 'to start a local Prisma Postgres server.
+2. Define models in the "schema.prisma" file.
+3. Run "prisma migrate dev" to migrate your local Prisma Postgres database. 
+
+
+consider this 
+=========================================================
+npm i prisma
+npx prisma init
+npx prisma dev
+=>schematfile
+||| npx prisma migrate dev
+|||| npx prisma generate
+|||| npx prisma db push
+npm i @prisma/client
+npm i --save-dev prisma@latest                       │
+npm i @prisma/client@latest 
+
+
+
+===========================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+model Stage {
+    id String @id @default(uuid())
+    title String 
+    niveau String
+    image String
+    numOrder Int 
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    sections Section[]
+}
+
+model Section {
+  id String @id @default(uuid())
+  title String
+  image String
+  niveau String
+  numOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stageId String?
+  stockage Stage? @relation(fields: [stageId], references: [id])
+  jeux Jeu[]
+}
+
+model Jeu {
+  id String @id @default(uuid())
+  title String
+  image String?
+  niveau String
+  numOrder Int
+  sectionId String?
+  jeuValide Boolean @default(false)
+  section Section? @relation(fields: [sectionId], references: [id])
+  questions Question[]
+  palmares Palmares[] // opposite relation field for Palmares.jeu
+}
+
+model Question {
+  id String @id @default(uuid())
+  intitule String
+  image String?
+  orderNum Int
+  reponses Reponse[]
+  jeuId String?
+  jeu Jeu? @relation(fields: [jeuId], references: [id])
+
+}
+
+model Reponse {
+  id String @id @default(uuid())
+  intitule String
+  isCorrect Boolean
+  questionId String?
+  question Question? @relation(fields: [questionId], references: [id])
+}
+
+model User {
+  id            String     @id @default(uuid())
+  clerkId       String     @unique
+  email         String     @unique
+  langue        String
+  firstName     String?
+  lastName      String?
+  country       String?
+  phone         String?
+  name          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  role          UserRole   @default(JOUEUR)
+  dernierNiveau String?
+  palmares      Palmares[]
+}
+
+enum UserRole {
+  ADMIN
+  JOUEUR
+  MANAGER
+}
+
+model Palmares {
+  id String @id @default(uuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id])
+  jeuId String?
+  jeu Jeu? @relation(fields: [jeuId], references: [id])
+  score Int
+  isFinished Boolean
+  createdAt DateTime @default(now())
+}
+
+=========================================
+
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined}
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = prisma;
+}
+
+================================================
+
+DATABASE_URL="postgresql://neondb_owner:npg_k6SVbfia0rGP@ep-spring-block-a8ody3fm-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
+# uncomment next line if you use Prisma <5.10
+DATABASE_URL_UNPOOLED="postgresql://neondb_owner:npg_k6SVbfia0rGP@ep-spring-block-a8ody3fm.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
+#CLERK
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bmF0aXZlLWdlY2tvLTUuY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_cdMpTf47zOxr63fiD1k1KutSe4AZJgv96xiBHT5zNc
+
+SIGNING_SECRET=whsec_Xh842mnHMiB7OUXdgDdBnYuAj2EP4isz
+
+
+
+================================= cursor agent========================
+in this page please, grab all stage from prisma data base, if current user has no palmares then get stage 1 and set statusStage===CURRENT. then display stage.image and stage.descriptions 
+
+
+
+
+in this page please, grab all stage from prisma data base, 
+if current user has no palmares then get stage with stage.numOrder===1 and set statusStage===CURRENT. then display stage.image and stage.descriptions and place a button "Commençons". When we click button,it select the section 1 of the stage, opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section. 
+
+if current user has a palmares get all stage and select stage with stage.statusStage===CURRENT then get all section relate to this stage. 
+
+if there is no section with section.statusSection===current then show current stage stage.image and stage.descriptions on page board.tsx  and place a button "Commençons". When we click button,it select all section of the stage and select the section with the lowest section.numOrder set section.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+
+if there is a section with section.statusSection===current then  check if current section.numOrder is egal to 6 or 11 or 16 or 21 then show current stage stage.image and stage.descriptions on page board.tsx  and place a button "Commençons". When we click button,it select all section of the stage and select the section with the lowest section.numOrder set section.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+
+if there is a section with section.statusSection===current then  check if current section.numOrder is not egal to 6 or 11 or 16 or 21 then select section.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+
+==============================================================GOOOOOD
+
+
+in this page please, grab all stage from prisma data base, 
+if current user has no palmares then get stage with stage.numOrder===1 and then display stage.image and stage.descriptions and place a button "Commençons". When we click button,it create a palmares with palmares.stage===current stage.niveau, palmares.statusStage===CURRENT, palmares.section===current section.niveau, palmares.statusSection===CURRENT,palmares.statusJeu===CURRENT, palmares.niveauJeu===current jeu.niveau, palmares.langue===current user'langue and palmares.numOrder===1 and also select the section from prisma data base where palmares.numOrder===section.numOrder of the current stage and it also opens a new page "jeu.tsx" with the id of the selected jeu and show the section.image and section.niveau and all show the "jeu" that is relation to this section. 
+
+if current user has a palmares get all stage and select stage from palmares  with palmares.statusStage===CURRENT and palmares.numOrder then select stage from prisma data base where stage.numOrder===palmares.numOrder and get all sections relate to this stage, then  check if current palmares.numOrder is egal to 6 or 11 or 16 or 21 then get stage from prisma data base where palmares.numOrder===stage.numOrder and show current stage stage.image and stage.descriptions on page board.tsx  and place a button "Commençons". 
+When we click button,it select all section of the current stage and select the section from prisma data base where palmares.numOrder===section.numOrder and set palmares.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+
+if current palmares.numOrder is not egal to 6 or 11 or 16 or 21 then select palmares.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+----------------------------------------------------------------
+
+if there is a section with section.statusSection===current then  check if current section.numOrder is not egal to 6 or 11 or 16 or 21 then select section.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
+
+
+========================================next jeu====================
+
+if isVictorious is true 

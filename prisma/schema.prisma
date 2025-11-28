@@ -1,0 +1,184 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  NEW
+  VALIDATED
+  CURRENT
+}
+
+model Stage {
+  id           String       @id @default(uuid())
+  langue       Langue
+  title        String
+  statusStage  Status       @default(NEW)
+  niveau       String
+  valide       Boolean      @default(false)
+  image        String
+  numOrder     Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  descriptions Paragraphe[]
+  jeux         Jeu[]
+  palmares     Palmares[]
+}
+
+model Paragraphe {
+  id      String  @id @default(uuid())
+  texte   String
+  stageId String?
+  stage   Stage?  @relation(fields: [stageId], references: [id])
+}
+
+model Section {
+  id            String     @id @default(uuid())
+  title         String
+  langue        Langue
+  statusSection Status     @default(NEW)
+  image         String
+  niveau        String
+  valide        Boolean    @default(false)
+  numOrder      Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  jeux          Jeu[]
+  palmares      Palmares[]
+}
+
+model Jeu {
+  id        String  @id @default(uuid())
+  langue    Langue
+  image     String?
+  niveau    String
+  statusJeu Status  @default(NEW)
+  numOrder  Int
+  valide    Boolean @default(false)
+  stageId   String
+  stage     Stage?  @relation(fields: [stageId], references: [id])
+
+  sectionId String?
+  section   Section? @relation(fields: [sectionId], references: [id])
+
+  questions Question[]
+  palmares  Palmares[]
+}
+
+model Question {
+  id       String    @id @default(uuid())
+  langue   Langue
+  intitule String
+  orderNum Int
+  status   Status    @default(NEW)
+  valide   Boolean   @default(false)
+  reponses Reponse[]
+
+  jeuId String?
+  jeu   Jeu?    @relation(fields: [jeuId], references: [id])
+}
+
+model Reponse {
+  id        String  @id @default(uuid())
+  intitule  String
+  langue    Langue
+  isCorrect Boolean
+
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id])
+}
+
+model User {
+  id         String      @id @default(uuid())
+  clerkId    String      @unique
+  email      String      @unique
+  langue     String?     @default("FR")
+  firstName  String
+  lastName   String
+  country    String?
+  phone      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  role       UserRole    @default(JOUEUR)
+  palmares   Palmares[]
+  boardIndex BoardIndex?
+}
+
+model BoardIndex {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  play1  Int
+  play2  Int
+  play3  Int
+  play4  Int
+  play5  Int
+  play6  Int
+  play7  Int
+  play8  Int
+  play9  Int
+  play10 Int
+  play11 Int
+  play12 Int
+  play13 Int
+  play14 Int
+  play15 Int
+  play16 Int
+  play17 Int
+  play18 Int
+  play19 Int
+  play20 Int
+  play21 Int
+  play22 Int
+  play23 Int
+  play24 Int
+  play25 Int
+}
+
+enum UserRole {
+  ADMIN
+  JOUEUR
+  MANAGER
+}
+
+model Palmares {
+  id String @id @default(uuid())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  stageId     String?
+  stage       Stage?  @relation(fields: [stageId], references: [id])
+  statusStage Status  @default(NEW)
+
+  sectionId      String?
+  section Section? @relation(fields: [sectionId], references: [id])
+  statusSection Status  @default(NEW)
+
+  jeuId     String?
+  jeu       Jeu?    @relation(fields: [jeuId], references: [id])
+  statusJeu Status  @default(NEW)
+
+  niveauJeu        String
+  langue           Langue
+  numOrder         Int
+  dernierNiveauJeu String?
+  jeuValide        Boolean  @default(false)
+  score            Int
+  isFinished       Boolean
+  createdAt        DateTime @default(now())
+}
+
+enum Langue {
+  FR
+  EN
+  ES
+  PT
+  DE
+}

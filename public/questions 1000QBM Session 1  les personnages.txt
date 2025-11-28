@@ -1,0 +1,442 @@
+const questions = [
+    {
+      id:1,
+      stageId:"Evangiles",
+      sectionId:"Personnages",
+      text: "Hérode a été empereur au temps de Jésus ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true }, 
+      ],
+   },
+   {
+      id:2,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Joseph, le fiancé de Marie était un des fils de Jacob .",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:3,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Marie la mère de Jésus était descendante de David",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:4,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Marie la mère de Jésus était descendante de David",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:5,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Jacques fils de Zébédée a été le deuxième martyr chrétien mentionné dans la Bible ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:6,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Jean, apôtre de Jésus, était aussi fils de Zébédée ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:7,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Pierre a été le premier à être nommé apôtre",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:8,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi les apôtres, c’est André qui fut le premier à connaitre Jésus ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:9,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Caïphe a été grand prêtre en Israël, au temps de Jésus, pendant quatre ans.",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:10,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Pilate était le roi Romain qui a condamné Jésus",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:11,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Nicodème fut cet homme à qui Jésus avait enseigné qu’il fallait naitre de nouveau pour entrer dans le Royaume de Dieu",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:12,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Zacharie, père de Jean – Baptiste devint sourd à cause du fait qu’il avait émis un doute lorsque l’ange Gabriel lui annonça qu’il aura un fils",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:13,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Elisabeth, la mère de Jean – Baptiste était la tante de Marie",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:14,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "César Auguste était un titre que Octave a été le premier à porter ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:15,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Thaddée était l’un des douze apôtre",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:16,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Tibère César fut le deuxième empereur de Rome et c’est sous son règne que Jean Baptiste prêcha. ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:17,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Marie sœur de Marthe, était de Béthanie ",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:18,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "A Jérusalem, il y avait une femme nommée Marthe, dont Jésus avait ressuscité le frère appelé Lazare.",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:19,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "La femme de laquelle Jésus chassa sept démons s’appelait Jeanne femme de Chuza",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: false },
+        { id: 1, text: "Faux", isCorrect: true },
+        
+      ],
+   },
+   {
+      id:20,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Anne était Grand prêtre au temps de Jésus.",
+      options: [
+        { id: 0, text: "Vrai", isCorrect: true },
+        { id: 1, text: "Faux", isCorrect: false },
+        
+      ],
+   },
+   {
+      id:21,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Lequel de ces hommes a eu l’oreille coupée par Pierre et guérie par le Seigneur Jésus ?",
+      options: [
+        { id: 0, text: "Maléléel", isCorrect: false },
+        { id: 1, text: "Malchus", isCorrect: true },
+        { id: 2, text: "Manahem", isCorrect: false },
+      ],
+    },
+    {
+      id:22,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Quand Jésus enfant fut présenté au temple, ils y trouvèrent une prophétesse très âgée qui y servait Dieu. Elle s’appelait :",
+      options: [
+        { id: 0, text: "Anne", isCorrect: true },
+        { id: 1, text: "Jeanne ", isCorrect: false },
+        { id: 2, text: "Marthe", isCorrect: false },
+      ],
+    },
+    {
+      id:23,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Quel est cet homme juste et pieux, qui,  vint dans le Temple, prit l’enfant Jésus dans ses bras et bénit les parents de Jésus, puis loua Dieu ?",
+      options: [
+        { id: 0, text: "Siméon", isCorrect: true },
+        { id: 1, text: "Zacharie", isCorrect: false },
+        { id: 2, text: "Samuel", isCorrect: false },
+      ],
+    },
+    {
+      id:24,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Comment s’appelait ce riche homme qui était disciple de Jésus et qui demanda le corps de Jésus à Pilate pour l’enterrer dans un sépulcre lui appartenant ?",
+      options: [
+        { id: 0, text: "Gamaliel ", isCorrect: false },
+        { id: 1, text: "Joseph d’Arimathée", isCorrect: true },
+        { id: 2, text: "Nicodème", isCorrect: false },
+      ],
+    },
+    {
+      id:25,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces Hérode, lequel a voulu tuer Jésus quand il était bébé ?",
+      options: [
+        { id: 0, text: "Antipater", isCorrect: false },
+        { id: 1, text: "Agrippa ", isCorrect: false },
+        { id: 2, text: "Hérode le Grand", isCorrect: true },
+      ],
+    },
+    {
+      id:26,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres, lequel a été personnellement (« évangélisé ») appelé par Jésus à le suivre.",
+      options: [
+        { id: 0, text: "Philippe", isCorrect: true },
+        { id: 1, text: "Pierre", isCorrect: false },
+        { id: 2, text: "André", isCorrect: false },
+      ],
+    },
+    {
+      id:27,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres, à qui a-t-il été dit : « Nous avons trouvé celui dont il est parlé dans la loi de Moïse et dans les prophètes, Jésus de Nazareth, fils de Joseph. »",
+      options: [
+        { id: 0, text: "Philippe", isCorrect: false },
+        { id: 1, text: "Thomas ", isCorrect: false },
+        { id: 2, text: "Nathanaël", isCorrect: true },
+      ],
+    },
+    {
+      id:28,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "A laquelle des Marie, Le Seigneur Jésus est apparu, après sa résurrection ?",
+      options: [
+        { id: 0, text: "Marie de Magdala", isCorrect: true },
+        { id: 1, text: "Marie mère de Jésus ", isCorrect: false },
+        { id: 2, text: "Marie de Béthanie", isCorrect: false },
+      ],
+    },
+    {
+      id:29,
+      stageId:"Evangiles",
+      sectionId:"Lieux"
+      text: "Parmi ces Hérode, devant lequel Paul a-t-il comparu ?",
+      options: [
+        { id: 0, text: "Hérode Antipas ", isCorrect: false },
+        { id: 1, text: "Hérode Agrippa 1er ", isCorrect: false },
+        { id: 2, text: "Hérode Agrippa 2", isCorrect: true },
+      ],
+    },
+    {
+      id:30,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Apôtre de Jésus, on pense souvent qu’il correspond à un des personnage (celui que Philippe a conduit à Jésus) :",
+      options: [
+        { id: 0, text: "Didyme ", isCorrect: false },
+        { id: 1, text: "Thaddée", isCorrect: false },
+        { id: 2, text: "Nathanaël", isCorrect: true },
+      ],
+    },
+    {
+      id:31,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "L’homme qui a dû porter la croix de Jésus, jusqu’au lieu de sa crucifixion, s’appelait :",
+      options: [
+        { id: 0, text: "Barrabas", isCorrect: false },
+        { id: 1, text: "Antonin le Pieux ", isCorrect: false },
+        { id: 2, text: "Simon", isCorrect: true },
+      ],
+    },
+    {
+      id:32,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres, lequel ne porte pas le surnom de Boanergès (fils du tonnerre)",
+      options: [
+        { id: 0, text: "Jean", isCorrect: false },
+        { id: 1, text: "Jacques", isCorrect: false },
+        { id: 2, text: "Jude", isCorrect: true },
+      ],
+    },
+    {
+      id:33,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres, lequel portait aussi le nom Didyme?",
+      options: [
+        { id: 0, text: "Thomas ", isCorrect: true },
+        { id: 1, text: "Barthélémy", isCorrect: false },
+        { id: 2, text: "Philippe", isCorrect: false },
+      ],
+    },
+    {
+      id:34,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Lequel des Jaques était aussi appelé Jacques « le Jeune »",
+      options: [
+        { id: 0, text: "Jacques, fils d’Alphée ", isCorrect: true },
+        { id: 1, text: "Jacques fils de Zébédée", isCorrect: false },
+        { id: 2, text: "Jacques l’auteur du Livre de Jacques", isCorrect: false },
+      ],
+    },
+    {
+      id:35,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres lequel s’était désigné comme le disciple que Jésus aimait ?»  ",
+      options: [
+        { id: 0, text: "Philippe", isCorrect: false },
+        { id: 1, text: "Jean ", isCorrect: true },
+        { id: 2, text: "Pierre", isCorrect: false },
+      ],
+    },
+    {
+      id:36,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Parmi ces apôtres lequel n’a pas vu Jésus ressuscité ?",
+      options: [
+        { id: 0, text: "Judas", isCorrect: true },
+        { id: 1, text: "Thomas", isCorrect: false },
+        { id: 2, text: "Jude", isCorrect: false },
+      ],
+    },
+    {
+      id:37,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Lebbée, Apôtre de Jésus, s’appelait aussi :",
+      options: [
+        { id: 0, text: "Jude", isCorrect: false },
+        { id: 1, text: "Thomas", isCorrect: false },
+        { id: 2, text: "Thaddée", isCorrect: true },
+      ],
+    },
+    {
+      id:38,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Luc, qu’est-ce qu’il n’était pas ?",
+      options: [
+        { id: 0, text: "Apôtre", isCorrect: true },
+        { id: 1, text: "Médecin", isCorrect: false },
+        { id: 2, text: "Compagnon de Paul", isCorrect: false },
+      ],
+    },
+    {
+      id:39,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Quel métier exerçait Mathieu avant de suivre Jésus ?",
+      options: [
+        { id: 0, text: "Faiseur de tente", isCorrect: false },
+        { id: 1, text: "Collecteur d’impôt", isCorrect: true },
+        { id: 2, text: "Médecin", isCorrect: false },
+      ],
+    },
+    {
+      id:40,
+      stageId:"Evangiles",
+      sectionId:"Personnages"
+      text: "Lévi,  Disciple de Jésus, sous quel nom était-il le plus connu ?",
+      options: [
+        { id: 0, text: "Mathias", isCorrect: false },
+        { id: 1, text: "Mathieu", isCorrect: true },
+        { id: 2, text: "Marc", isCorrect: false },
+      ],
+    },
+
+  ];
