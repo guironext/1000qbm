@@ -22,7 +22,7 @@ export default function DynamicLink({
 
   useEffect(() => {
     if (isLoaded && user) {
-      getUserRole(user.id).then((userRole) => {
+      getUserRole().then((userRole) => {
         setRole(userRole)
         setIsLoading(false)
       })
