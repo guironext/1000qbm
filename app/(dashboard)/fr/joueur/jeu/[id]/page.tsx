@@ -364,7 +364,7 @@ const JeuPage = () => {
                         </blockquote>
                         <p className="text-base md:text-lg text-blue-700 font-semibold mt-4">
                           — Deutéronome 31:6
-                        </p>
+                        </p>  
                       </div>
                     </div>
 
