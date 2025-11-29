@@ -28,15 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  
-  if (!publishableKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY. Please add it to your .env.local file."
-    );
-  }
 
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider publishableKey={publishableKey || ''}>
       <html lang="fr">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
