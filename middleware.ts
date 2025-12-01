@@ -24,18 +24,21 @@ function createLocalizedUrl(basePath: string, language: SupportedLanguage, req: 
 }
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
-  const { userId, sessionClaims, redirectToSignIn } = await auth();
+  try {
+    const { userId, sessionClaims, redirectToSignIn } = await auth();
 
-  console.log(sessionClaims?.metadata);
-  console.log(req.nextUrl.searchParams.get("onboardingCompleted"));
+    // Safely access metadata
+    const metadata = sessionClaims?.metadata || {} as { onboardingCompleted?: boolean; role?: string; langue?: string };
+    console.log(metadata);
+    console.log(req.nextUrl.searchParams.get("onboardingCompleted"));
 
-  // Get user language from Clerk metadata
-  const userLanguage = getUserLanguage(sessionClaims);
+    // Get user language from Clerk metadata
+    const userLanguage = getUserLanguage(sessionClaims);
 
   if (
     userId &&
     req.nextUrl.pathname === "/" &&
-    !sessionClaims?.metadata?.onboardingCompleted
+    !metadata.onboardingCompleted
   ) {
     const onboardingUrl = new URL("/onboarding", req.url);
     return NextResponse.redirect(onboardingUrl);
@@ -44,8 +47,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (
     userId &&
     req.nextUrl.pathname === "/" &&
-    sessionClaims?.metadata?.onboardingCompleted &&
-    sessionClaims?.metadata?.role === "ADMIN"
+    metadata.onboardingCompleted &&
+    metadata.role === "ADMIN"
   ) {
     const adminUrl = createLocalizedUrl("/admin", userLanguage, req);
     return NextResponse.redirect(adminUrl);
@@ -54,8 +57,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (
     userId &&
     req.nextUrl.pathname === "/" &&
-    sessionClaims?.metadata?.onboardingCompleted &&
-    sessionClaims?.metadata?.role === "JOUEUR"
+    metadata.onboardingCompleted &&
+    metadata.role === "JOUEUR"
   ) {
     const joueurUrl = createLocalizedUrl("/joueur", userLanguage, req);
     return NextResponse.redirect(joueurUrl);
@@ -64,8 +67,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (
     userId &&
     req.nextUrl.pathname === "/" &&
-    sessionClaims?.metadata?.onboardingCompleted &&
-    sessionClaims?.metadata?.role === "MANAGER"
+    metadata.onboardingCompleted &&
+    metadata.role === "MANAGER"
   ) {
     const managerUrl = createLocalizedUrl("/manager", userLanguage, req);
     return NextResponse.redirect(managerUrl);
@@ -81,24 +84,24 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   if (
     userId &&
-    sessionClaims?.metadata?.onboardingCompleted &&
+    metadata.onboardingCompleted &&
     isOnboardingRoute(req)
   ) {
     console.log("Onboarding completed, redirecting to appropriate page");
 
-    if (sessionClaims?.metadata?.role === "ADMIN") {
+    if (metadata.role === "ADMIN") {
       console.log("Redirecting admin to admin page");
       const adminUrl = createLocalizedUrl("/admin", userLanguage, req);
       return NextResponse.redirect(adminUrl);
     }
 
-    if (sessionClaims?.metadata?.role === "JOUEUR") {
+    if (metadata.role === "JOUEUR") {
       console.log("Redirecting joueur to joueur page");
       const joueurUrl = createLocalizedUrl("/joueur", userLanguage, req);
       return NextResponse.redirect(joueurUrl);
     }
 
-    if (sessionClaims?.metadata?.role === "MANAGER") {
+    if (metadata.role === "MANAGER") {
       console.log("Redirecting manager to manager page");
       const managerUrl = createLocalizedUrl("/manager", userLanguage, req);
       return NextResponse.redirect(managerUrl);
@@ -108,17 +111,17 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (userId && isOnboardingRoute(req)) {
     if (req.nextUrl.searchParams.get("onboardingCompleted")) {
       console.log("Onboarding completed, redirecting to appropriate page");
-      if (sessionClaims?.metadata?.role === "ADMIN") {
+      if (metadata.role === "ADMIN") {
         const adminUrl = createLocalizedUrl("/admin", userLanguage, req);
         return NextResponse.redirect(adminUrl);
       }
 
-      if (sessionClaims?.metadata?.role === "JOUEUR") {
+      if (metadata.role === "JOUEUR") {
         const joueurUrl = createLocalizedUrl("/joueur", userLanguage, req);
         return NextResponse.redirect(joueurUrl);
       }
 
-      if (sessionClaims?.metadata?.role === "MANAGER") {
+      if (metadata.role === "MANAGER") {
         const managerUrl = createLocalizedUrl("/manager", userLanguage, req);
         return NextResponse.redirect(managerUrl);
       }
@@ -128,7 +131,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   if (
     userId &&
-    !sessionClaims?.metadata?.onboardingCompleted &&
+    !metadata.onboardingCompleted &&
     !isOnboardingRoute(req)
   ) {
     const onboardingUrl = new URL("/onboarding", req.url);
@@ -136,7 +139,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   if (isAdminRoute(req)) {
-    if (sessionClaims?.metadata?.role === "ADMIN") {
+    if (metadata.role === "ADMIN") {
       return NextResponse.next();
     } else {
       const homepageUrl = new URL("/", req.url);
@@ -145,7 +148,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   if (isJoueurRoute(req)) {
-    if (sessionClaims?.metadata?.role === "JOUEUR") {
+    if (metadata.role === "JOUEUR") {
       return NextResponse.next();
     } else {
       const homepageUrl = new URL("/", req.url);
@@ -154,7 +157,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   if (isManagerRoute(req)) {
-    if (sessionClaims?.metadata?.role === "MANAGER") {
+    if (metadata.role === "MANAGER") {
       return NextResponse.next();
     } else {
       const homepageUrl = new URL("/", req.url);
@@ -167,6 +170,11 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
+    // Return a response instead of throwing to prevent middleware invocation failure
+    return NextResponse.next();
+  }
 });
 
 export const config = {
