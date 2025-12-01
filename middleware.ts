@@ -25,31 +25,11 @@ function createLocalizedUrl(basePath: string, language: SupportedLanguage, req: 
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   try {
-    let userId: string | null = null;
-    let sessionClaims: { metadata?: { onboardingCompleted?: boolean; role?: string; langue?: string } } | null = null;
-    let redirectToSignIn: (options?: { returnBackUrl?: string }) => NextResponse;
-
-    try {
-      const authResult = await auth();
-      userId = authResult.userId ?? null;
-      sessionClaims = authResult.sessionClaims as { metadata?: { onboardingCompleted?: boolean; role?: string; langue?: string } } | null;
-      redirectToSignIn = authResult.redirectToSignIn;
-    } catch (authError) {
-      console.error("Auth error in middleware:", authError);
-      // If auth fails and it's a public route, allow access
-      if (isPublicRoute(req)) {
-        return NextResponse.next();
-      }
-      // Otherwise, try to redirect to sign in, but fallback to next if that fails
-      try {
-        return NextResponse.redirect(new URL("/sign-in", req.url));
-      } catch {
-        return NextResponse.next();
-      }
-    }
+    const authResult = await auth();
+    const { userId, sessionClaims, redirectToSignIn } = authResult;
 
     // Safely access metadata with proper type checking
-    const metadata = sessionClaims?.metadata || {} as { onboardingCompleted?: boolean; role?: string; langue?: string };
+    const metadata = (sessionClaims as { metadata?: { onboardingCompleted?: boolean; role?: string; langue?: string } } | null)?.metadata || {} as { onboardingCompleted?: boolean; role?: string; langue?: string };
 
     // Get user language from Clerk metadata
     const userLanguage = getUserLanguage(sessionClaims);
@@ -93,7 +73,9 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return NextResponse.redirect(managerUrl);
   }
 
-  if (!userId) {
+  if (isPublicRoute(req)) return NextResponse.next();
+
+  if (!userId && !isPublicRoute(req)) {
     return redirectToSignIn({
       returnBackUrl: req.url,
     });

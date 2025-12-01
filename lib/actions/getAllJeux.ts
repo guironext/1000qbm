@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "../prisma";
-import { Langue } from "../generated/prisma";
+import { Langue } from "../generated/prisma/index.js";
 
 export type JeuInput = {
   langue: Langue;

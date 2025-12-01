@@ -3,8 +3,8 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
-import { UserRole } from "../generated/prisma";
-import { Langue } from "../generated/prisma";
+import { UserRole } from "../generated/prisma/index.js";
+import { Langue } from "../generated/prisma/index.js";
 
 // Extract palmares initialization logic
 export async function initializePalmaresForUser(userId: string, userLangue: string) {

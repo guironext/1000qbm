@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { Langue } from "@/lib/generated/prisma" // Add this import
+import { Langue } from "../../../lib/generated/prisma/index.js" // Add this import
 
 // Create new stage
 export async function POST(req: Request) {
