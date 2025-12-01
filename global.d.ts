@@ -5,7 +5,8 @@ declare global {
         metadata: {
             role: string, 
             onboardingCompleted: boolean, 
-            userId: string, 
+            userId: string,
+            langue?: string,
         }
     }
 }

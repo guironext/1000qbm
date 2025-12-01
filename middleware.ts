@@ -12,7 +12,7 @@ const SUPPORTED_LANGUAGES = ["FR", "EN", "ES", "PT", "DE"] as const;
 type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
 // Helper function to get user language from Clerk metadata
-function getUserLanguage(sessionClaims: any): SupportedLanguage {
+function getUserLanguage(sessionClaims: { metadata?: { langue?: string } } | null | undefined): SupportedLanguage {
   const userLang = sessionClaims?.metadata?.langue as SupportedLanguage;
   return SUPPORTED_LANGUAGES.includes(userLang) ? userLang : "FR";
 }
