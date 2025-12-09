@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { UserRole } from "../../../lib/generated/prisma/index.js"
+import { UserRole } from "@/lib/generated/prisma/index.js"
 
 // Get all users
 export async function GET() {
