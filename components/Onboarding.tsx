@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { UserRole } from "../lib/generated/prisma/index.js";
+import { UserRole } from "@/lib/generated/prisma/index.js";
 
 const employeeSchema = z.object({
   firstName: z.string().min(1, "prénoms obligatoire").max(55),
