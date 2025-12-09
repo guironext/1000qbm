@@ -1,6 +1,6 @@
 "use server";
 
-import { Langue } from "../generated/prisma";
+import { Langue } from "../generated/prisma/index.js";
 import { prisma } from "../prisma";
 
 

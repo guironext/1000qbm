@@ -1,4 +1,4 @@
-import { Langue } from "@/lib/generated/prisma"
+import { Langue } from "@/lib/generated/prisma/index.js"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
