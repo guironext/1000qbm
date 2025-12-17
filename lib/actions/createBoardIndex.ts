@@ -57,9 +57,9 @@ export async function createBoardIndex() {
 
   // Redirect based on language
   const langue = user.langue || "FR";
-  
+
   if (langue === "EN") {
-    redirect("/en/joueur/board");
+    redirect("/eng/joueur/board");
   } else if (langue === "ES") {
     redirect("/es/joueur/board");
   } else {

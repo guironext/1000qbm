@@ -174,7 +174,7 @@ const OnboardingForm = ({
     <Card>
       <CardHeader>
         <CardTitle className="hidden sm:flex text-xl font-bold text-center justify-center">
-          Bienvennue sur
+          Bienvenue sur
         </CardTitle>
         <CardTitle className="sm:flex hidden text-xl font-bold text-center justify-center">
           1000 Questions Bibliques pour Moi
@@ -421,7 +421,7 @@ const OnboardingForm = ({
                 type="submit" 
                 className="w-full" 
                 disabled={isSubmitting}>
-                  {isSubmitting ? "Processing" : "Enregistrer"}
+                  {isSubmitting ? "Traitement en cours" : "Enregistrer"}
                 </Button>
                 
                

@@ -48,15 +48,15 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
     }
 
     // Try to find section with CURRENT status, fallback to first section
-    let session1 = await prisma.section.findFirst({
+    let section1 = await prisma.section.findFirst({
       where: { 
         statusSection: "CURRENT" 
       },
       orderBy: { numOrder: 'asc' },
     });
 
-    if (!session1) {
-      session1 = await prisma.section.findFirst({
+    if (!section1) {
+      section1 = await prisma.section.findFirst({
         orderBy: { numOrder: 'asc' },
       });
     }
@@ -65,7 +65,7 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
     const firstJeu = await prisma.jeu.findFirst({
       where: {
         stageId: stage1?.id,
-        sectionId: session1?.id,
+        sectionId: section1?.id,
       },
       orderBy: { numOrder: 'asc' },
     });
@@ -81,19 +81,19 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
       });
     }
 
-    console.log("Debug - stage1:", stage1?.title, "session1:", session1?.title, "jeu:", jeu?.id);
+    console.log("Debug - stage1:", stage1?.title, "section1:", section1?.title, "jeu:", jeu?.id);
 
-    if (stage1 && session1 && jeu) {
+    if (stage1 && section1 && jeu) {
       const palmares = await prisma.palmares.create({
         data: {
           userId,
           stageId: stage1.id,
           statusStage: "CURRENT",
-          sectionId: session1.id,
+          sectionId: section1.id,
           statusSection: "CURRENT",
           jeuId: jeu.id,
           statusJeu: "CURRENT",
-          niveauJeu: `${stage1.title}-${session1.title}`,
+          niveauJeu: `${stage1.title}-${section1.title}`,
           langue: (userLangue as Langue) || Langue.FR,
           numOrder: 1,
           jeuValide: false,
@@ -104,8 +104,8 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
       console.log("Palmares created successfully:", palmares.id);
       return true;
     }
-    
-    console.log("Could not create palmares - missing required records. Stage:", !!stage1, "Section:", !!session1, "Jeu:", !!jeu);
+
+    console.log("Could not create palmares - missing required records. Stage:", !!stage1, "Section:", !!section1, "Jeu:", !!jeu);
     return false;
   } catch (error) {
     console.error("Error creating palmares:", error);

@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left">
           {/* Left */}
           <div className="order-1 sm:order-none">
-            Concepteur: Pasteur KOFFI M.
+            Concepteur: Pasteur DESSI KOFFI
           </div>
 
           {/* Center */}

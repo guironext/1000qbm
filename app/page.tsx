@@ -14,7 +14,7 @@ export default function Home() {
 
         {/* Mobile heading */}
         <h1 className="sm:hidden text-lg font-bold text-gray-900 dark:text-gray-100">
-          1000 Questions Bibliques pour Moi !
+          1000 QUESTIONS BIBLIQUES POUR MOI !
         </h1>
       </div>
 
