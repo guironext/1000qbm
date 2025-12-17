@@ -1,7 +1,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { Langue } from "@/lib/generated/prisma/index.js"
+import { Langue } from "@/lib/generated/prisma"
 
 
 // Create new stage
