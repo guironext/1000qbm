@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Static export disabled - API routes require a server
-  // output: 'export',
+  // output: 'export', // Cannot use static export with API routes
   
   // Custom build directory (optional - defaults to '.next')
   // distDir: 'build',
