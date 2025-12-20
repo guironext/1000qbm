@@ -22,8 +22,6 @@ export const metadata: Metadata = {
   description: "Jeu Biblique",
 };
 
-export const dynamic = 'force-dynamic';
-
 export default function RootLayout({
   children,
 }: Readonly<{
