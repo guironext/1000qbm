@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Custom build directory (optional - defaults to '.next')
-  // distDir: 'build',
+  distDir: 'build',
   images: {
     unoptimized: true,
     remotePatterns: [
