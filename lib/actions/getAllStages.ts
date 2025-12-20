@@ -1,7 +1,7 @@
 "use server";
 
-import { Langue } from "../generated/prisma/index.js";
-import { prisma } from "../prisma";
+import { Langue } from "@/lib/generated/prisma/index.js";
+import { prisma } from "@/lib/prisma";
 
 
 export type StageInput = {

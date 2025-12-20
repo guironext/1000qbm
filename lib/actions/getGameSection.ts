@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { Langue } from "../generated/prisma/index.js";
+import { Langue } from "@/lib/generated/prisma/index.js";
 
 export async function getGameSection() {
   try {
