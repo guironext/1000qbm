@@ -456,9 +456,15 @@ const AdminDashboard = () => {
         }
         toast.success('Image téléchargée avec succès!');
       } else {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        toast.error('Erreur lors du téléchargement de l\'image');
+        try {
+          const errorData = await response.json();
+          console.error('Error response:', errorData);
+          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+        } catch {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          toast.error('Erreur lors du téléchargement de l\'image');
+        }
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -683,9 +689,15 @@ const AdminDashboard = () => {
         setAddJeuFormData({...addJeuFormData, image: result.url});
         toast.success('Image téléchargée avec succès!');
       } else {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        toast.error('Erreur lors du téléchargement de l\'image');
+        try {
+          const errorData = await response.json();
+          console.error('Error response:', errorData);
+          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+        } catch {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          toast.error('Erreur lors du téléchargement de l\'image');
+        }
       }
     } catch (error) {
       console.error('Error uploading image:', error);
