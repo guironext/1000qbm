@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { title, niveau, image, numOrder, langue } = body
 
-    if (!title || !niveau || !image) {
+    if (!title || !niveau) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 

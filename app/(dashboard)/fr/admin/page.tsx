@@ -388,8 +388,8 @@ const AdminDashboard = () => {
 
   const handleSaveNewStage = async () => {
     try {
-      if (!addFormData.title || !addFormData.niveau || !addFormData.image) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
+      if (!addFormData.title || !addFormData.niveau) {
+        toast.error('Veuillez remplir tous les champs obligatoires (titre et niveau)');
         return;
       }
 
@@ -494,8 +494,8 @@ const AdminDashboard = () => {
 
   const handleSaveNewSection = async () => {
     try {
-      if (!addSectionFormData.title || !addSectionFormData.niveau || !addSectionFormData.image) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
+      if (!addSectionFormData.title || !addSectionFormData.niveau) {
+        toast.error('Veuillez remplir tous les champs obligatoires (titre et niveau)');
         return;
       }
 

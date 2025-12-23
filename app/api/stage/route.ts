@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     console.log('Received data:', body) // Add this line
     const { title, niveau, image, numOrder, langue, descriptions } = body
 
-    if (!title || !niveau || !image) {
+    if (!title || !niveau) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
