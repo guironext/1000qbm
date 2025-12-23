@@ -20,7 +20,7 @@ npm i @prisma/client
 npm i --save-dev prisma@latest                       │
 npm i @prisma/client@latest 
 
-
+npx prisma db push --force-reset 
 
 ===========================================================
 

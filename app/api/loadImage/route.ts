@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
-import fs from "fs"
-import path from "path"
+import { v2 as cloudinary } from 'cloudinary'
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export async function POST(req: Request) {
   try {
@@ -8,19 +13,27 @@ export async function POST(req: Request) {
     const file = data.get("image") as File
     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 })
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true })
-    }
-
+    // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer())
-    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-    const filePath = path.join(uploadsDir, fileName)
-    
-    fs.writeFileSync(filePath, buffer)
 
-    return NextResponse.json({ url: `/uploads/${fileName}` })
+    // Upload to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: '1000qbm-images',
+          public_id: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          resource_type: 'auto',
+        },
+        (error, result) => {
+          if (error) reject(error)
+          else if (result) resolve(result)
+          else reject(new Error('Upload failed'))
+        }
+      ).end(buffer)
+    })
+
+    const uploadResult = result as { secure_url: string }
+    return NextResponse.json({ url: uploadResult.secure_url })
   } catch (error) {
     console.error("Error uploading image:", error)
     return NextResponse.json({ error: "Failed to upload image" }, { status: 500 })

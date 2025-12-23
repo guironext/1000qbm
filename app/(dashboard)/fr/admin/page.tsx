@@ -218,12 +218,17 @@ const AdminDashboard = () => {
   // Add this helper function after the getJeuNiveau function (around line 200)
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) return '';
-    
-    // If it's already a full URL path, return as is
+
+    // If it's already a full URL (https), return as is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+
+    // If it's a relative path starting with '/', return as is
     if (imagePath.startsWith('/')) {
       return imagePath;
     }
-    
+
     // If it's just a filename, prepend the uploads path
     return `/uploads/${imagePath}`;
   };
