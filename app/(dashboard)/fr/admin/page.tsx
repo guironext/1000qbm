@@ -176,9 +176,28 @@ const AdminDashboard = () => {
     sectionId: ''
   });
   const [selectedJeu, setSelectedJeu] = useState<Jeu | null>(null);
+  const [editingJeu, setEditingJeu] = useState<Jeu | null>(null);
+  const [isEditJeuDialogOpen, setIsEditJeuDialogOpen] = useState(false);
+  const [editJeuFormData, setEditJeuFormData] = useState({
+    langue: 'FR',
+    image: '',
+    niveau: '',
+    numOrder: 0,
+    stageId: '',
+    sectionId: ''
+  });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isAddQuestionDialogOpen, setIsAddQuestionDialogOpen] = useState(false);
   const [addQuestionFormData, setAddQuestionFormData] = useState({
+    intitule: '',
+    langue: 'FR',
+    orderNum: 0,
+    jeuId: '',
+    reponses: [] as { intitule: string; isCorrect: boolean; langue: string }[]
+  });
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [isEditQuestionDialogOpen, setIsEditQuestionDialogOpen] = useState(false);
+  const [editQuestionFormData, setEditQuestionFormData] = useState({
     intitule: '',
     langue: 'FR',
     orderNum: 0,
@@ -210,6 +229,27 @@ const AdminDashboard = () => {
     // Update the form data with the calculated niveau
     if (niveauValue !== addJeuFormData.niveau) {
       setAddJeuFormData({...addJeuFormData, niveau: niveauValue});
+    }
+    
+    return niveauValue;
+  };
+
+  const getEditJeuNiveau = () => {
+    const selectedStage = stages.find(stage => stage.id === editJeuFormData.stageId);
+    const selectedSection = sections.find(section => section.id === editJeuFormData.sectionId);
+    
+    let niveauValue = '';
+    if (selectedStage && selectedSection) {
+      niveauValue = `${selectedStage.niveau}-${selectedSection.niveau}`;
+    } else if (selectedStage) {
+      niveauValue = selectedStage.niveau;
+    } else if (selectedSection) {
+      niveauValue = selectedSection.niveau;
+    }
+    
+    // Update the form data with the calculated niveau
+    if (niveauValue !== editJeuFormData.niveau) {
+      setEditJeuFormData({...editJeuFormData, niveau: niveauValue});
     }
     
     return niveauValue;
@@ -724,6 +764,167 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleEditJeu = (jeu: Jeu) => {
+    setEditingJeu(jeu);
+    setEditJeuFormData({
+      langue: jeu.langue,
+      image: jeu.image || '',
+      niveau: jeu.niveau,
+      numOrder: jeu.numOrder,
+      stageId: jeu.stageId,
+      sectionId: jeu.sectionId || ''
+    });
+    setIsEditJeuDialogOpen(true);
+  };
+
+  const handleSaveJeu = async () => {
+    if (!editingJeu) return;
+
+    try {
+      // Calculate niveau based on selected stage/section
+      const niveauValue = getEditJeuNiveau();
+      
+      const response = await fetch('/api/jeu', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingJeu.id,
+          langue: editJeuFormData.langue,
+          image: editJeuFormData.image || null,
+          niveau: niveauValue || editJeuFormData.niveau,
+          numOrder: editJeuFormData.numOrder,
+          stageId: editJeuFormData.stageId,
+          sectionId: editJeuFormData.sectionId || null
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Jeu modifié avec succès!');
+        await loadDashboardData();
+        setIsEditJeuDialogOpen(false);
+        setEditingJeu(null);
+        // Refresh selected jeu if it was the one being edited
+        if (selectedJeu?.id === editingJeu.id) {
+          const updatedJeux = await getAllJeux();
+          const updatedJeu = updatedJeux.find(j => j.id === editingJeu.id);
+          if (updatedJeu) {
+            await handleSelectJeu(updatedJeu);
+          }
+        }
+      } else {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Erreur inconnue';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        } else {
+          try {
+            const errorText = await response.text();
+            console.error('Non-JSON error response:', errorText);
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        }
+        
+        console.error('Failed to update jeu:', errorMessage);
+        toast.error('Erreur lors de la modification du jeu: ' + errorMessage);
+      }
+    } catch (error) {
+      console.error('Error updating jeu:', error);
+      toast.error('Erreur lors de la modification du jeu');
+    }
+  };
+
+  const handleDeleteJeu = async (jeuId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce jeu ? Cette action supprimera également toutes les questions associées.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/jeu?id=${jeuId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Jeu supprimé avec succès!');
+        await loadDashboardData();
+        // Clear selected jeu if it was deleted
+        if (selectedJeu?.id === jeuId) {
+          setSelectedJeu(null);
+          setQuestions([]);
+        }
+      } else {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Erreur inconnue';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        } else {
+          try {
+            const errorText = await response.text();
+            console.error('Non-JSON error response:', errorText);
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        }
+        
+        console.error('Failed to delete jeu:', errorMessage);
+        toast.error('Erreur lors de la suppression du jeu: ' + errorMessage);
+      }
+    } catch (error) {
+      console.error('Error deleting jeu:', error);
+      toast.error('Erreur lors de la suppression du jeu');
+    }
+  };
+
+  const handleEditJeuImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/loadImage', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setEditJeuFormData({...editJeuFormData, image: result.url});
+        toast.success('Image téléchargée avec succès!');
+      } else {
+        try {
+          const errorData = await response.json();
+          console.error('Error response:', errorData);
+          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+        } catch {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          toast.error('Erreur lors du téléchargement de l\'image');
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erreur lors du téléchargement de l\'image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleAddQuestion = () => {
     if (!selectedJeu) {
       toast.error('Veuillez sélectionner un jeu d\'abord');
@@ -806,6 +1007,83 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error deleting question:', error);
       toast.error('Erreur lors de la suppression de la question');
+    }
+  };
+
+  const handleEditQuestion = (question: Question) => {
+    setEditingQuestion(question);
+    setEditQuestionFormData({
+      intitule: question.intitule,
+      langue: question.langue,
+      orderNum: question.orderNum,
+      jeuId: question.jeuId || '',
+      reponses: question.reponses?.map(r => ({
+        intitule: r.intitule,
+        isCorrect: r.isCorrect,
+        langue: r.langue
+      })) || []
+    });
+    setIsEditQuestionDialogOpen(true);
+  };
+
+  const handleSaveQuestion = async () => {
+    if (!editingQuestion) return;
+
+    try {
+      if (!editQuestionFormData.intitule || !editQuestionFormData.jeuId) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      const response = await fetch('/api/question', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingQuestion.id,
+          intitule: editQuestionFormData.intitule,
+          langue: editQuestionFormData.langue,
+          orderNum: editQuestionFormData.orderNum,
+          jeuId: editQuestionFormData.jeuId
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Question modifiée avec succès!');
+        // Refresh questions for the selected jeu
+        if (selectedJeu) {
+          await handleSelectJeu(selectedJeu);
+        }
+        setIsEditQuestionDialogOpen(false);
+        setEditingQuestion(null);
+      } else {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Erreur inconnue';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        } else {
+          try {
+            const errorText = await response.text();
+            console.error('Non-JSON error response:', errorText);
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          } catch {
+            errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+          }
+        }
+        
+        console.error('Failed to update question:', errorMessage);
+        toast.error('Erreur lors de la modification de la question: ' + errorMessage);
+      }
+    } catch (error) {
+      console.error('Error updating question:', error);
+      toast.error('Erreur lors de la modification de la question');
     }
   };
 
@@ -1200,9 +1478,35 @@ const AdminDashboard = () => {
                           </Badge>
                         </div>
                       )}
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditJeu(jeu);
+                          }}
+                          className="hover:bg-blue-50 hover:border-blue-300"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteJeu(jeu.id);
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                  ))
+                  )) 
+                  
                 )}
+                
               </div>
             </CardContent>
           </Card>
@@ -1275,6 +1579,17 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditQuestion(question);
+                          }}
+                          className="hover:bg-purple-50 hover:border-purple-300"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="outline" 
@@ -2186,6 +2501,192 @@ const AdminDashboard = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Edit Jeu Dialog */}
+        <Dialog open={isEditJeuDialogOpen} onOpenChange={setIsEditJeuDialogOpen}>
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center text-xl">
+                <Edit className="h-5 w-5 mr-2 text-blue-600" />
+                Modifier le Jeu
+              </DialogTitle>
+              <DialogDescription>
+                Modifiez les informations du jeu sélectionné.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-1">
+              <div className="grid gap-6 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-stage" className="text-sm font-medium text-gray-700">
+                    Stage *
+                  </Label>
+                  <Select
+                    value={editJeuFormData.stageId}
+                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, stageId: value})}
+                  >
+                    <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Sélectionner un stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
+                          Stage {stage.niveau} - {stage.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-section" className="text-sm font-medium text-gray-700">
+                    Section
+                  </Label>
+                  <Select
+                    value={editJeuFormData.sectionId || undefined}
+                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, sectionId: value || ''})}
+                  >
+                    <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Sélectionner une section (optionnel)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sections.map((section) => (
+                        <SelectItem key={section.id} value={section.id}>
+                          Section {section.niveau} - {section.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-niveau" className="text-sm font-medium text-gray-700">
+                    Niveau *
+                  </Label>
+                  <Input
+                    id="edit-jeu-niveau"
+                    value={getEditJeuNiveau()}
+                    className="border-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Niveau du jeu"
+                    readOnly
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-langue" className="text-sm font-medium text-gray-700">
+                    Langue
+                  </Label>
+                  <Select
+                    value={editJeuFormData.langue}
+                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, langue: value})}
+                  >
+                    <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Sélectionner une langue" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languageOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-image" className="text-sm font-medium text-gray-700">
+                    Image
+                  </Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="edit-jeu-image"
+                      value={editJeuFormData.image}
+                      onChange={(e) => setEditJeuFormData({...editJeuFormData, image: e.target.value})}
+                      className="border-2 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="URL de l'image ou téléchargez un fichier"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleEditJeuImageUpload(file);
+                          }
+                        }}
+                        className="hidden"
+                        id="edit-jeu-image-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('edit-jeu-image-upload')?.click()}
+                        disabled={isUploading}
+                        className="border-2 hover:border-blue-300"
+                      >
+                        {isUploading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-1" />
+                        )}
+                        {isUploading ? 'Upload...' : 'Télécharger'}
+                      </Button>
+                      {editJeuFormData.image && (
+                        <div className="flex items-center space-x-2">
+                          <ImageIcon className="h-4 w-4 text-green-600" />
+                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                        </div>
+                      )}
+                    </div>
+                    {editJeuFormData.image && (
+                      <div className="mt-2">
+                        <Image
+                          src={getImageUrl(editJeuFormData.image)}
+                          alt="Preview"
+                          width={100}
+                          height={100}
+                          className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-jeu-numOrder" className="text-sm font-medium text-gray-700">
+                    Ordre
+                  </Label>
+                  <Input
+                    id="edit-jeu-numOrder"
+                    type="number"
+                    value={editJeuFormData.numOrder}
+                    onChange={(e) => setEditJeuFormData({...editJeuFormData, numOrder: parseInt(e.target.value) || 0})}
+                    className="border-2 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditJeuDialogOpen(false)}
+                className="border-2"
+              >
+                Annuler
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSaveJeu}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Sauvegarder
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Add Question Dialog */}
         <Dialog open={isAddQuestionDialogOpen} onOpenChange={setIsAddQuestionDialogOpen}>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
@@ -2325,6 +2826,124 @@ const AdminDashboard = () => {
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Créer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Question Dialog */}
+        <Dialog open={isEditQuestionDialogOpen} onOpenChange={setIsEditQuestionDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center text-xl">
+                <Edit className="h-5 w-5 mr-2 text-purple-600" />
+                Modifier la Question
+              </DialogTitle>
+              <DialogDescription>
+                Modifiez les informations de la question sélectionnée.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-1">
+              <div className="grid gap-6 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-question-intitule" className="text-sm font-medium text-gray-700">
+                    Question *
+                  </Label>
+                  <Textarea
+                    id="edit-question-intitule"
+                    value={editQuestionFormData.intitule}
+                    onChange={(e) => setEditQuestionFormData({...editQuestionFormData, intitule: e.target.value})}
+                    className="border-2 focus:border-purple-500 focus:ring-purple-500 min-h-[100px]"
+                    placeholder="Entrez votre question ici..."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-question-langue" className="text-sm font-medium text-gray-700">
+                    Langue
+                  </Label>
+                  <Select
+                    value={editQuestionFormData.langue}
+                    onValueChange={(value) => setEditQuestionFormData({...editQuestionFormData, langue: value})}
+                  >
+                    <SelectTrigger className="border-2 focus:border-purple-500 focus:ring-purple-500">
+                      <SelectValue placeholder="Sélectionner une langue" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languageOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-question-orderNum" className="text-sm font-medium text-gray-700">
+                    Ordre
+                  </Label>
+                  <Input
+                    id="edit-question-orderNum"
+                    type="number"
+                    value={editQuestionFormData.orderNum}
+                    onChange={(e) => setEditQuestionFormData({...editQuestionFormData, orderNum: parseInt(e.target.value) || 0})}
+                    className="border-2 focus:border-purple-500 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Réponses (modification des réponses via l&apos;API séparée)
+                  </Label>
+                  <div className="space-y-3">
+                    {editQuestionFormData.reponses.map((reponse, index) => (
+                      <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex-1">
+                          <Input
+                            value={reponse.intitule}
+                            disabled
+                            placeholder={`Réponse ${index + 1}`}
+                            className="border-2 bg-white"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={reponse.isCorrect}
+                            disabled
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-600">Correcte</span>
+                        </div>
+                      </div>
+                    ))}
+                    {editQuestionFormData.reponses.length === 0 && (
+                      <p className="text-sm text-gray-500 italic">Aucune réponse disponible</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditQuestionDialogOpen(false);
+                  setEditingQuestion(null);
+                }}
+                className="border-2"
+              >
+                Annuler
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSaveQuestion}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Enregistrer
               </Button>
             </DialogFooter>
           </DialogContent>

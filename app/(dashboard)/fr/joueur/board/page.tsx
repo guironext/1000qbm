@@ -1,174 +1,182 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBoardPageData, createInitialPalmares, updatePalmaresSection } from '@/lib/actions/getBoardPageData';
 import Image from 'next/image';
-
-interface Paragraphe {
-  id: string;
-  texte: string;
-}
+import { useUser } from '@/hooks/useUser';
 
 interface Stage {
   id: string;
-  title: string;
-  image: string;
   niveau: string;
-  numOrder: number;
-  descriptions: Paragraphe[];
-}
-
-interface User {
-  id: string;
-  langue?: string;
-}
-
-interface Palmares {
-  id: string;
-  numOrder: number;
-  jeuId?: string | null;
-}
-
-interface Section {
-  id: string;
-  title: string;
-}
-
-interface BoardData {
-  hasNoPalmares: boolean;
-  stage: Stage;
-  user: User;
-  currentPalmares: Palmares | null;
-  isSpecialStage?: boolean;
-  sections?: Section[];
+  image: string;
+  descriptions: string;
+  stageNumOrder: number;
 }
 
 const BoardPage = () => {
   const router = useRouter();
-  const [data, setData] = useState<BoardData | null>(null);
+  const { user } = useUser();
+  const [currentStage, setCurrentStage] = useState<Stage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    if (user) {
+      initializeBoard();
+    }
+  }, [user]);
+
+  const initializeBoard = async () => {
     try {
-      const result = await getBoardPageData();
-      setData(result as BoardData);
-    } catch (err) {
-      const error = err as Error;
-      if (error.message === 'ONBOARDING_REQUIRED') {
-        router.push('/onboarding');
-        return;
+      // Get all stages
+      const stagesResponse = await fetch('/api/stages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getAll' })
+      });
+      const stages = await stagesResponse.json();
+
+      // Check if user has palmares
+      const palmaresResponse = await fetch('/api/palmares', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCurrent', userId: user?.id })
+      });
+      const palmares = await palmaresResponse.json();
+
+      if (!palmares) {
+        // No palmares - get first stage
+        const firstStage = stages.find((s: Stage) => s.stageNumOrder === 1);
+        setCurrentStage(firstStage);
+      } else {
+        // Has palmares - get current stage
+        const currentStage = stages.find((s: Stage) => s.stageNumOrder === palmares.stageNumOrder);
+        setCurrentStage(currentStage);
       }
-      setError(error.message || 'Error loading data');
+    } catch (error) {
+      console.error('Error initializing board:', error);
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  };
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const handleStartStage = async () => {
+    if (!user || !currentStage) return;
 
-  const handleCommencer = async () => {
-    if (!data) return;
-    
     try {
-      setLoading(true);
+      // Check if user has palmares
+      const palmaresResponse = await fetch('/api/palmares', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCurrent', userId: user.id })
+      });
+      const existingPalmares = await palmaresResponse.json();
 
-      if (data.hasNoPalmares) {
-        // Create initial palmares
-        const result = await createInitialPalmares(
-          data.user.id,
-          data.stage.id
-        );
+      if (!existingPalmares) {
+        // Get first section of first stage
+        const sectionResponse = await fetch('/api/sections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'getByStageAndOrder', 
+            stageId: currentStage.id,
+            numOrder: 1 
+          })
+        });
+        const section = await sectionResponse.json();
+
+        // Create first palmares
+        await fetch('/api/palmares', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'createNew',
+            userId: user.id,
+            stageLength: 1,
+            stageNumOrder: 1,
+            stageNiveau: currentStage.niveau,
+            sectionNumOrder: 1,
+            sectionNiveau: section.niveau,
+            niveauJeu: section.jeux[0]?.niveau || '',
+            langue: user.langue || 'FR',
+            numOrder: 1,
+            score: 0,
+            stageId: currentStage.id,
+            sectionId: section.id
+          })
+        });
+
+        // Navigate to first jeu
+        router.push(`/fr/joueur/jeu/${section.jeux[0]?.id}`);
+      } else {
+        // Get current section and navigate to jeu
+        const sectionResponse = await fetch('/api/sections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'getByStageAndOrder', 
+            stageId: currentStage.id,
+            numOrder: existingPalmares.sectionNumOrder 
+          })
+        });
+        const section = await sectionResponse.json();
         
-        if (result.success && result.jeuId) {
-          router.push(`/fr/joueur/jeu/${result.jeuId}`);
-        }
-      } else if (data.currentPalmares) {
-        // Update palmares section for special stage
-        const result = await updatePalmaresSection(data.currentPalmares.id);
-        
-        if (result.success && result.jeuId) {
-          router.push(`/fr/joueur/jeu/${result.jeuId}`);
+        if (section?.jeux?.[0]) {
+          router.push(`/fr/joueur/jeu/${section.jeux[0].id}`);
         }
       }
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message || 'Error starting game');
-      setLoading(false);
+    } catch (error) {
+      console.error('Error starting stage:', error);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Chargement...</div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-lg sm:text-xl">Chargement...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (!currentStage) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl text-red-500">Erreur: {error}</div>
-      </div>
-    );
-  }
-
-  if (!data || !data.stage) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Aucune donnée disponible</div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-lg sm:text-xl">Aucun stage disponible</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-          {/* Left Div - Stage Image */}
-          <div className="w-full md:w-1/2">
-            <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-              <Image
-                src={data.stage.image}
-                alt={data.stage.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-              />
-            </div>
+    <div className="min-h-screen p-4 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Stage Image */}
+          <div className="relative w-full h-64 sm:h-80 lg:h-96">
+            <Image
+              src={currentStage.image}
+              alt={`Stage ${currentStage.niveau}`}
+              fill
+              className="object-cover"
+            />
           </div>
 
-          {/* Right Div - Content */}
-          <div className="w-full md:w-1/2 flex flex-col">
-            {/* Stage Title */}
-            <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center md:text-left">
-              {data.stage.title}
-            </h1>
-
-            {/* Stage Descriptions */}
-            {data.stage.descriptions && data.stage.descriptions.length > 0 && (
-              <div className="mb-8 space-y-4">
-                {data.stage.descriptions.map((desc) => (
-                  <p key={desc.id} className="text-lg text-gray-900 leading-relaxed">
-                    {desc.texte}
-                  </p>
-                ))}
+          {/* Stage Content */}
+          <div className="p-6 lg:p-8">
+            <div className="text-center space-y-6">
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">
+                Stage {currentStage.niveau}
+              </h1>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                <p className="text-lg lg:text-xl text-gray-700 leading-relaxed">
+                  {currentStage.descriptions}
+                </p>
               </div>
-            )}
 
-            {/* Commençons Button */}
-            <div className="flex justify-center md:justify-start mt-auto">
               <button
-                onClick={handleCommencer}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleStartStage}
+                className="w-full max-w-md py-4 px-8 rounded-xl font-bold text-xl text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               >
-                {loading ? 'Chargement...' : 'Commençons'}
+                🚀 Commençons
               </button>
             </div>
           </div>

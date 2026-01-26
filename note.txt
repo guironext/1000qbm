@@ -170,7 +170,31 @@ if there is a section with section.statusSection===current then  check if curren
 
 
 in this page please, grab all stage from prisma data base, 
-if current user has no palmares then get stage with stage.numOrder===1 and then display stage.image and stage.descriptions and place a button "Commençons". When we click button,it create a palmares with palmares.stage===current stage.niveau, palmares.statusStage===CURRENT, palmares.section===current section.niveau, palmares.statusSection===CURRENT,palmares.statusJeu===CURRENT, palmares.niveauJeu===current jeu.niveau, palmares.langue===current user'langue and palmares.numOrder===1 and also select the section from prisma data base where palmares.numOrder===section.numOrder of the current stage and it also opens a new page "jeu.tsx" with the id of the selected jeu and show the section.image and section.niveau and all show the "jeu" that is relation to this section. 
+
+if current user has no palmares then get stage with stage.numOrder===1 and its related section where section.numOrder===1 then display selected stage.image and selected stage.descriptions and place a button "Commençons".
+
+if current user has a palmares then get stage with stage.numOrder===1 and its related section where section.numOrder===1 then display selected stage.image and selected stage.descriptions and place a button "Commençons".
+
+
+
+When we click button,it create a palmares with 
+palmares.user===current user,
+palmares.stageLength===1,
+palmares.stage===current 
+palmares.stage.niveau=== selected stage.niveau, 
+palmares.statusStage===CURRENT, 
+
+palmares.section===current,
+palmares.section.niveau===section.niveau, 
+palmares.statusSection===CURRENT,
+
+palmares.statusJeu===CURRENT, 
+palmares.niveauJeu===current jeu.niveau, 
+palmares.langue===current user'langue and 
+palmares.numOrder===1 
+and also select the section from prisma data base where 
+palmares.numOrder===section.numOrder 
+of the current stage and it also opens a new page "jeu.tsx" with the id of the selected jeu and show the section.image and section.niveau and all show the "jeu" that is relation to this section. 
 
 if current user has a palmares get all stage and select stage from palmares  with palmares.statusStage===CURRENT and palmares.numOrder then select stage from prisma data base where stage.numOrder===palmares.numOrder and get all sections relate to this stage, then  check if current palmares.numOrder is egal to 6 or 11 or 16 or 21 then get stage from prisma data base where palmares.numOrder===stage.numOrder and show current stage stage.image and stage.descriptions on page board.tsx  and place a button "Commençons". 
 When we click button,it select all section of the current stage and select the section from prisma data base where palmares.numOrder===section.numOrder and set palmares.statusSection===CURRENT and opens a new page "jeu.tsx" with the id of the selected jeu and grab the image and section.niveau and all show the "jeu" that is relation to this section.
@@ -184,3 +208,99 @@ if there is a section with section.statusSection===current then  check if curren
 ========================================next jeu====================
 
 if isVictorious is true 
+
+
+get current palmares.stage.numOrder === stage.numOrder
+
+if current palmares.stage length> stage.numOrder length 
+
+============================================================New good================
+                                                                                                                                                                                                                                                                                                                                                                                                                    ============================GO OO OD+++++++++++++++++++++++++++++++++++++++++++++++++++
+                                                                                                                                                                                                                                                                              the the page joueur.tsx at line 57, when we click the button "Commencer à jouer", we want to check if current user has a palmares ? if no,  then create a palmares for the user with 
+palmares.user===current user,
+
+palmares.stageLength===1,
+
+palmares.statusStage===CURRENT, 
+palmares.stageNumOrder===1
+
+palmares.statusSection===CURRENT,
+palmares.sectionNumOrder===1
+
+palmares.statusJeu===CURRENT, 
+ 
+palmares.langue===current user'langue 
+palmares.score===0
+palmares.isFinished===false 
+
+then redirect to page /fr/joueur/board.tsx
+
+if yes, redirect toto page /fr/joueur/board.tsx
+
+
++++++++++++++++++++++++++++++nEXT page BOARD++++++++++++++++++++++++++>>>>
+in this page board.tsx grab all stage and all palmares related to this current user
+if palmares.statusStage===CURRENT then 
+select stage from prisma data base 
+where palmares.stage.numOrder===stage.numOrder and its related section. 
+if palmares.statusSection===CURRENT then
+select section from prisma data base where palmares.section.numOrder===section.numOrder then display selected stage.image and selected stage.descriptions and place a button "Commençons".
+
+now we want to activated the button "Commençons" at line 70. when we click it opens a new page "jeu.tsx" with the id of the selected jeu and show the section.image and section.niveau of the selected section and all show the "jeu" that is relation to this section.
+
++++++++++++++++++++++++++++++JEUX ++++++++++++++++++++++++++++++++++++++++
+
+in the page jeux/[id]/page.tsx,  get all jeu related to the selected section, if palmares.statusJeu===CURRENT then select jeu from prisma data base  where palmares.niveauJeu===jeu.niveau and its related question and responses.
+then display question one afte another with it related responseuntil the end of question related this selected jeu. 
+
+++++++++++++++++++++++++VICTORIEUX++++++++++++++++++++++++++++++++++++++++++
+
+when we click the button "🎉 Félicitations !!! Jeu Suivant" at line 392, its grab current user's CURRENT palmares with palmares.isFinished===false and select stage from prisma data base with statusStage===CURRENT
+
+if palmares.stageLength length<stage length then update the selected palmares with:
+
+palmares.statusStage===CURRENT, 
+palmares.statusSection===VALIDATED,
+palmares.statusJeu===VALIDATED, 
+palmares.score=== current score
+palmares.isFinished===true 
+
+and set score===0
+then create new palmares for the current user with 
+
+new palmares.user===current user,
+new palmares.stageLength===previous palmares.stageLength+1,
+new palmares.statusStage===CURRENT, 
+new palmares.stageNumOrder===previous palmares.stageNumOrder+1
+new palmares.statusSection===CURRENT,
+new palmares.sectionNumOrder===previous palmares.sectionNumOrder+1
+new palmares.statusJeu===CURRENT, 
+new palmares.langue===current user'langue 
+new palmares.score===0
+new palmares.isFinished===false 
+
+then redirect to page /fr/joueur/board.tsx
+
+if palmares.stageLength length>stage length then update the selected palmares with:
+
+palmares.statusStage===VALIDATED, 
+palmares.statusSection===VALIDATED,
+palmares.statusJeu===VALIDATED, 
+palmares.score=== current score
+palmares.isFinished===true 
+
+and set score===0
+then create new palmares for the current user with 
+
+new palmares.user===current user,
+new palmares.stageLength===previous palmares.stageLength+1,
+new palmares.statusStage===CURRENT, 
+new palmares.stageNumOrder===previous palmares.stageNumOrder+1
+new palmares.statusSection===CURRENT,
+new palmares.sectionNumOrder===previous palmares.sectionNumOrder+1
+new palmares.statusJeu===CURRENT, 
+new palmares.langue===current user'langue 
+new palmares.score===0
+new palmares.isFinished===false 
+
+then redirect to page /fr/joueur/board.tsx

@@ -15,19 +15,20 @@ enum Status {
 }
 
 model Stage {
-  id           String       @id @default(uuid())
-  langue       Langue
-  title        String
-  statusStage  Status       @default(NEW)
-  niveau       String
-  valide       Boolean      @default(false)
-  image        String
-  numOrder     Int
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  descriptions Paragraphe[]
-  jeux         Jeu[]
-  palmares     Palmares[]
+  id             String            @id @default(uuid())
+  langue         Langue
+  title          String
+  statusStage    Status            @default(NEW)
+  niveau         String
+  valide         Boolean           @default(false)
+  image          String
+  numOrder       Int
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  compterSection CompteurSection[]
+  descriptions   Paragraphe[]
+  jeux           Jeu[]
+  palmares       Palmares[]
 }
 
 model Paragraphe {
@@ -38,18 +39,19 @@ model Paragraphe {
 }
 
 model Section {
-  id            String     @id @default(uuid())
-  title         String
-  langue        Langue
-  statusSection Status     @default(NEW)
-  image         String
-  niveau        String
-  valide        Boolean    @default(false)
-  numOrder      Int
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  jeux          Jeu[]
-  palmares      Palmares[]
+  id             String            @id @default(uuid())
+  title          String
+  langue         Langue
+  statusSection  Status            @default(NEW)
+  image          String
+  niveau         String
+  valide         Boolean           @default(false)
+  numOrder       Int
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  jeux           Jeu[]
+  palmares       Palmares[]
+  compterSection CompteurSection[]
 }
 
 model Jeu {
@@ -94,51 +96,22 @@ model Reponse {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  clerkId    String      @unique
-  email      String      @unique
-  langue     String?     @default("FR")
-  firstName  String
-  lastName   String
-  country    String?
-  phone      String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  role       UserRole    @default(JOUEUR)
-  palmares   Palmares[]
-  boardIndex BoardIndex?
+  id             String            @id @default(uuid())
+  clerkId        String            @unique
+  email          String            @unique
+  langue         String?           @default("FR")
+  firstName      String
+  lastName       String
+  country        String?
+  phone          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  role           UserRole          @default(JOUEUR)
+  palmares       Palmares[]
+  compterSection CompteurSection[]
+  
 }
 
-model BoardIndex {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-  play1  Int
-  play2  Int
-  play3  Int
-  play4  Int
-  play5  Int
-  play6  Int
-  play7  Int
-  play8  Int
-  play9  Int
-  play10 Int
-  play11 Int
-  play12 Int
-  play13 Int
-  play14 Int
-  play15 Int
-  play16 Int
-  play17 Int
-  play18 Int
-  play19 Int
-  play20 Int
-  play21 Int
-  play22 Int
-  play23 Int
-  play24 Int
-  play25 Int
-}
 
 enum UserRole {
   ADMIN
@@ -154,24 +127,47 @@ model Palmares {
 
   stageId     String?
   stage       Stage?  @relation(fields: [stageId], references: [id])
-  statusStage Status  @default(NEW)
 
-  sectionId      String?
-  section Section? @relation(fields: [sectionId], references: [id])
-  statusSection Status  @default(NEW)
+  statusStage Status  @default(NEW)
+  stageNumOrder Int
+  stageLength Int @default(1)
+
+  sectionId     String?
+  section       Section? @relation(fields: [sectionId], references: [id])
+
+  statusSection Status   @default(NEW)
+  sectionNumOrder Int
 
   jeuId     String?
   jeu       Jeu?    @relation(fields: [jeuId], references: [id])
-  statusJeu Status  @default(NEW)
 
-  niveauJeu        String
+  statusJeu Status  @default(NEW)
+  niveauJeu String
+
   langue           Langue
   numOrder         Int
-  dernierNiveauJeu String?
-  jeuValide        Boolean  @default(false)
   score            Int
-  isFinished       Boolean
-  createdAt        DateTime @default(now())
+  isFinished       Boolean @default(false)
+  createdAt        DateTime          @default(now())
+  compterSection   CompteurSection[]
+
+}
+
+model CompteurSection {
+  id    String @id @default(uuid())
+  count Int    @default(1)
+
+  stageId String
+  stage   Stage  @relation(fields: [stageId], references: [id])
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id])
+
+  palmaresId String?
+  palmares   Palmares? @relation(fields: [palmaresId], references: [id])
 }
 
 enum Langue {

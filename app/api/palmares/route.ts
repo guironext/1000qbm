@@ -1,62 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  updateCurrentPalmares,
+  resetPreviousJeuScore,
+  getCurrentUserPalmares,
+  createNewPalmares,
+  getNextSection,
+  getNextStage,
+  updatePalmaresStageStatus,
+  startGame,
+  getCurrentStagePalmares
+} from '@/lib/actions/palmaresActions';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { action, ...data } = await request.json();
+
+    switch (action) {
+      case 'updateCurrent':
+        return NextResponse.json(await updateCurrentPalmares(data.userId, data.score));
+      
+      case 'resetPrevious':
+        return NextResponse.json(await resetPreviousJeuScore(data.userId));
+      
+      case 'getCurrent':
+        return NextResponse.json(await getCurrentUserPalmares(data.userId));
+      
+      case 'createNew':
+        return NextResponse.json(await createNewPalmares(data));
+      
+      case 'getNextSection':
+        return NextResponse.json(await getNextSection(data.stageId, data.sectionNumOrder));
+      
+      case 'getNextStage':
+        return NextResponse.json(await getNextStage(data.stageNumOrder));
+      
+      case 'updateStageStatus':
+        return NextResponse.json(await updatePalmaresStageStatus(data.userId, data.stageNumOrder));
+
+      case 'startGame':
+        return NextResponse.json(await startGame(data.userId));
+
+      case 'getCurrentStage':
+        return NextResponse.json(await getCurrentStagePalmares(data.userId));
+
+      default:
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const body = await req.json();
-    const { jeuId, niveauJeu, langue, numOrder, dernierNiveauJeu, score, sectionId, stageId } = body;
-
-    // Check if palmares already exists for this jeu
-    const existingPalmares = await prisma.palmares.findFirst({
-      where: {
-        userId: user.id,
-        jeuId: jeuId,
-      },
-    });
-
-    if (existingPalmares) {
-      return NextResponse.json({ 
-        exists: true, 
-        message: "Palmares already exists" 
-      });
-    }
-
-    // Create new palmares entry
-    const palmares = await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        jeuId,
-        sectionId,
-        stageId,
-        statusJeu: "VALIDATED",
-        niveauJeu,
-        langue,
-        numOrder,
-        dernierNiveauJeu,
-        jeuValide: true,
-        score,
-        isFinished: true,
-      },
-    });
-
-    return NextResponse.json({ success: true, palmares });
   } catch (error) {
-    console.error("Error saving palmares:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Palmares API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

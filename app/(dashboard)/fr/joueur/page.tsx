@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
@@ -9,6 +9,20 @@ import { Play } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useUser();
+
+  const handleStart = async () => {
+    if (!user) return;
+
+    await fetch('/api/palmares', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'startGame', userId: user.id }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    router.push("/fr/joueur/board");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center justify-center">
@@ -54,9 +68,9 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
             <SignedIn>
               
-                <Button 
-                onClick={() => router.push("/fr/joueur/board")}
-                size="lg" 
+                <Button
+                onClick={handleStart}
+                size="lg"
                 className="bg-amber-600 hover:bg-amber-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto">
                   <Play className="mr-2 h-5 w-5" />
                   Commencer à Jouer
