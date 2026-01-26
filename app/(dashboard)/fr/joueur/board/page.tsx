@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
@@ -19,13 +19,7 @@ const BoardPage = () => {
   const [currentStage, setCurrentStage] = useState<Stage | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      initializeBoard();
-    }
-  }, [user]);
-
-  const initializeBoard = async () => {
+  const initializeBoard = useCallback(async () => {
     try {
       // Get all stages
       const stagesResponse = await fetch('/api/stages', {
@@ -57,7 +51,13 @@ const BoardPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      initializeBoard();
+    }
+  }, [user, initializeBoard]);
 
   const handleStartStage = async () => {
     if (!user || !currentStage) return;
