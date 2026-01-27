@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
@@ -19,45 +19,43 @@ const BoardPage = () => {
   const [currentStage, setCurrentStage] = useState<Stage | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const initializeBoard = useCallback(async () => {
-    try {
-      // Get all stages
-      const stagesResponse = await fetch('/api/stages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getAll' })
-      });
-      const stages = await stagesResponse.json();
-
-      // Check if user has palmares
-      const palmaresResponse = await fetch('/api/palmares', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getCurrent', userId: user?.id })
-      });
-      const palmares = await palmaresResponse.json();
-
-      if (!palmares) {
-        // No palmares - get first stage
-        const firstStage = stages.find((s: Stage) => s.stageNumOrder === 1);
-        setCurrentStage(firstStage);
-      } else {
-        // Has palmares - get current stage
-        const currentStage = stages.find((s: Stage) => s.stageNumOrder === palmares.stageNumOrder);
-        setCurrentStage(currentStage);
-      }
-    } catch (error) {
-      console.error('Error initializing board:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
   useEffect(() => {
     if (user) {
-      initializeBoard();
+      (async () => {
+        try {
+          // Get all stages
+          const stagesResponse = await fetch('/api/stages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getAll' })
+          });
+          const stages = await stagesResponse.json();
+
+          // Check if user has palmares
+          const palmaresResponse = await fetch('/api/palmares', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getCurrent', userId: user?.id })
+          });
+          const palmares = await palmaresResponse.json();
+
+          if (!palmares) {
+            // No palmares - get first stage
+            const firstStage = stages.find((s: Stage) => s.stageNumOrder === 1);
+            setCurrentStage(firstStage);
+          } else {
+            // Has palmares - get current stage
+            const currentStage = stages.find((s: Stage) => s.stageNumOrder === palmares.stageNumOrder);
+            setCurrentStage(currentStage);
+          }
+        } catch (error) {
+          console.error('Error initializing board:', error);
+        } finally {
+          setLoading(false);
+        }
+      })();
     }
-  }, [user, initializeBoard]);
+  }, [user]);
 
   const handleStartStage = async () => {
     if (!user || !currentStage) return;
