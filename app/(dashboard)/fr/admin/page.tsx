@@ -382,7 +382,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        toast.success('Stage supprimé avec succès!');
+        toast.success('Stage supprimé avec succès!!');
         await loadDashboardData();
       } else {
         const contentType = response.headers.get('content-type');

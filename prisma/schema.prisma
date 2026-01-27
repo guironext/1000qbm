@@ -109,7 +109,8 @@ model User {
   role           UserRole          @default(JOUEUR)
   palmares       Palmares[]
   compterSection CompteurSection[]
-  
+  boardIndex     BoardIndex?
+
 }
 
 
@@ -117,6 +118,38 @@ enum UserRole {
   ADMIN
   JOUEUR
   MANAGER
+}
+
+model BoardIndex {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  play1  Int @default(1)
+  play2  Int @default(2)
+  play3  Int @default(3)
+  play4  Int @default(4)
+  play5  Int @default(5)
+  play6  Int @default(6)
+  play7  Int @default(7)
+  play8  Int @default(8)
+  play9  Int @default(9)
+  play10 Int @default(10)
+  play11 Int @default(11)
+  play12 Int @default(12)
+  play13 Int @default(13)
+  play14 Int @default(14)
+  play15 Int @default(15)
+  play16 Int @default(16)
+  play17 Int @default(17)
+  play18 Int @default(18)
+  play19 Int @default(19)
+  play20 Int @default(20)
+  play21 Int @default(21)
+  play22 Int @default(22)
+  play23 Int @default(23)
+  play24 Int @default(24)
+  play25 Int @default(25)
 }
 
 model Palmares {
