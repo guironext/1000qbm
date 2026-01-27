@@ -175,12 +175,13 @@ model Palmares {
   jeu       Jeu?    @relation(fields: [jeuId], references: [id])
 
   statusJeu Status  @default(NEW)
-  niveauJeu String
+  niveau    String
 
   langue           Langue
   numOrder         Int
   score            Int
   isFinished       Boolean @default(false)
+  jeuValide        Boolean @default(false)
   createdAt        DateTime          @default(now())
   compterSection   CompteurSection[]
 

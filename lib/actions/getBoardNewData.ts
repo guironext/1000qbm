@@ -137,14 +137,14 @@ export async function createNewPalmares(stageNumOrder: number) {
       isFinished: false,
       stageId: stage.id,
       statusStage: 'CURRENT',
-      stageNumOrder: 1,
+      stageNumOrder: stage.numOrder,
       stageLength: 1,
       sectionId: section.id,
       statusSection: 'CURRENT',
-      sectionNumOrder: 1,
+      sectionNumOrder: section.numOrder,
       jeuId: jeu.id,
       statusJeu: 'CURRENT',
-      niveauJeu: jeu.niveau
+      niveau: jeu.niveau
     }
   });
   console.log('Palmares created with ID:', palmares.id);

@@ -53,7 +53,7 @@ export async function getGameSection() {
           statusSection: 'CURRENT',
           sectionNumOrder: jeu.section.numOrder,
           statusJeu: 'CURRENT',
-          niveauJeu: jeu.niveau,
+          niveau: jeu.niveau,
           langue: (user.langue as Langue) || Langue.FR,
           numOrder: jeu.numOrder,
           score: 0,

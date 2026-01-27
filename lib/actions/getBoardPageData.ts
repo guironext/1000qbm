@@ -144,7 +144,7 @@ export async function createInitialPalmares(userId: string, stageId: string) {
         sectionNumOrder: 1,
         jeuId: jeu.id,
         statusJeu: "CURRENT",
-        niveauJeu: jeu.niveau,
+        niveau: jeu.niveau,
         langue: stage.langue,
         numOrder: stage.numOrder,
         score: 0,

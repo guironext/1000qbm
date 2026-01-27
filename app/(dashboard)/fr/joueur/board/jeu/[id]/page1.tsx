@@ -25,11 +25,11 @@ const page = async () => {
     return <div>No current jeu</div>
   }
 
-  // Select jeu where palmares.niveauJeu === jeu.niveau
+  // Select jeu where palmares.niveau === jeu.niveau
   const jeu = await prisma.jeu.findFirst({
     where: {
       sectionId: palmares.sectionId!,
-      niveau: palmares.niveauJeu
+      niveau: palmares.niveau
     },
     include: {
       stage: true,

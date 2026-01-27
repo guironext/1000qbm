@@ -98,7 +98,7 @@ export async function createNewPalmares(data: {
   stageNiveau: string;
   sectionNumOrder: number;
   sectionNiveau: string;
-  niveauJeu: string;
+  niveau: string;
   langue: string;
   numOrder: number;
   score: number;
@@ -114,7 +114,7 @@ export async function createNewPalmares(data: {
       sectionNumOrder: data.sectionNumOrder,
       statusSection: 'CURRENT',
       statusJeu: 'CURRENT',
-      niveauJeu: data.niveauJeu,
+      niveau: data.niveau,
       langue: data.langue as 'FR' | 'EN',
       numOrder: data.numOrder,
       score: data.score,
@@ -312,7 +312,7 @@ export async function startGame(userId: string) {
       stageId: firstStage.id,
       sectionId: firstSection.id,
       jeuId: firstJeu.id,
-      niveauJeu: firstJeu.niveau,
+      niveau: firstJeu.niveau,
       numOrder: 1
     }
   });
@@ -426,7 +426,7 @@ export async function handleNextGame(clerkId: string, score: number) {
       stageId: nextStage.id,
       sectionId: nextSection.id,
       jeuId: nextJeu.id,
-      niveauJeu: nextJeu.niveau,
+      niveau: nextJeu.niveau,
       numOrder: currentPalmares.numOrder + 1
     }
   });
@@ -521,7 +521,7 @@ export async function finishGame(userId: string, score: number) {
           sectionNumOrder: nextSectionNumOrder,
           jeuId: nextJeu.id,
           statusJeu: 'CURRENT',
-          niveauJeu: nextJeu.niveau,
+          niveau: nextJeu.niveau,
           langue: currentPalmares.langue,
           numOrder: currentPalmares.numOrder + 1,
           score: 0,
@@ -580,7 +580,7 @@ export async function finishGame(userId: string, score: number) {
           sectionNumOrder: 1,
           jeuId: nextJeu.id,
           statusJeu: 'NEW', // Set to NEW until started
-          niveauJeu: nextJeu.niveau,
+          niveau: nextJeu.niveau,
           langue: currentPalmares.langue,
           numOrder: currentPalmares.numOrder + 1,
           score: 0,
