@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { Play } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { startGameAction } from "@/lib/actions/playerActions";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  
 
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12">

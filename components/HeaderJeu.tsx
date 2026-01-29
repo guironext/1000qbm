@@ -13,13 +13,13 @@ import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 import { Search, X, Trophy, Star, Target } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getUserData, getCurrentGameProgress } from "@/lib/actions/getUserData";
+import { getHeaderData } from "@/lib/actions/boardActions";
 
 // Add these type definitions
 interface Palmares {
   id: string;
   score: number;
-  isFinished: boolean;
+  jeuValide: boolean;
   jeu?: {
     stage?: { title: string } | null;
     section?: { title: string } | null;
@@ -50,12 +50,11 @@ const HeaderJeu = () => {
     const fetchUserData = async () => {
       if (user) {
         try {
-          const [userInfo, currentGameInfo] = await Promise.all([
-            getUserData(),
-            getCurrentGameProgress(),
-          ]);
-          setUserData(userInfo as UserData | null);
-          setCurrentGame(currentGameInfo as CurrentGame | null);
+          const data = await getHeaderData();
+          if (data) {
+            setUserData(data.user as unknown as UserData);
+            setCurrentGame(data.currentPalmares as unknown as CurrentGame);
+          }
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -68,10 +67,10 @@ const HeaderJeu = () => {
   const totalScore =
     userData?.palmares?.reduce(
       (sum: number, palmares: Palmares) => sum + palmares.score,
-      0
+      0,
     ) || 0;
   const completedGames =
-    userData?.palmares?.filter((p: Palmares) => p.isFinished).length || 0;
+    userData?.palmares?.filter((p: Palmares) => p.jeuValide).length || 0;
   const currentScore = currentGame?.score || 0;
 
   return (
@@ -216,24 +215,22 @@ const HeaderJeu = () => {
                   </div>
 
                   {/* Recent Achievements */}
-                  {userData?.palmares
-                    ?.slice(0, 3)
-                    .map((palmares: Palmares) => (
-                      <div
-                        key={palmares.id}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Star className="w-3 h-3 text-amber-500" />
-                          <span className="text-xs text-gray-700">
-                            {palmares.jeu?.stage?.title}
-                          </span>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {palmares.score} pts
-                        </Badge>
+                  {userData?.palmares?.slice(0, 3).map((palmares: Palmares) => (
+                    <div
+                      key={palmares.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Star className="w-3 h-3 text-amber-500" />
+                        <span className="text-xs text-gray-700">
+                          {palmares.jeu?.stage?.title}
+                        </span>
                       </div>
-                    ))}
+                      <Badge variant="outline" className="text-xs">
+                        {palmares.score} pts
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

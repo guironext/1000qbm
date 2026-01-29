@@ -17,7 +17,7 @@ export default async function TransitStagePage() {
             Étape introuvable
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            Impossible de charger les informations de l'étape.
+            Impossible de charger les informations de l&apos;étape.
           </p>
         </div>
       </div>
@@ -69,16 +69,18 @@ export default async function TransitStagePage() {
 
             {/* Descriptions */}
             <div className="space-y-4 relative z-10 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {currentStage.descriptions?.map((desc: any, index: number) => (
-                <div key={desc.id || index} className="flex gap-4">
-                  <div className="flex-shrink-0 mt-1.5">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+              {currentStage.descriptions?.map(
+                (desc: { id: string; texte: string }, index: number) => (
+                  <div key={desc.id || index} className="flex gap-4">
+                    <div className="flex-shrink-0 mt-1.5">
+                      <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-200 text-lg leading-relaxed">
+                      {desc.texte}
+                    </p>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-200 text-lg leading-relaxed">
-                    {desc.texte}
-                  </p>
-                </div>
-              ))}
+                ),
+              )}
               {(!currentStage.descriptions ||
                 currentStage.descriptions.length === 0) && (
                 <p className="text-center text-gray-500 italic">

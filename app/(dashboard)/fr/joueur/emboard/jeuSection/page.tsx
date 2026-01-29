@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import QuestionFlow from "@/components/game/QuestionFlow";
 export default async function JeuSectionPage() {

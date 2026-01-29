@@ -10,9 +10,7 @@ async function deleteAllUsers() {
       const palmaresCount = await tx.palmares.deleteMany({});
       console.log(`Deleted ${palmaresCount.count} palmares records`);
 
-      // 2. Delete all boardIndex records (related to users)
-      const boardIndexCount = await tx.boardIndex.deleteMany({});
-      console.log(`Deleted ${boardIndexCount.count} boardIndex records`);
+      // 2. (Skipped) boardIndex no longer exists
 
       // 3. Delete all users
       const usersCount = await tx.user.deleteMany({});
@@ -29,4 +27,3 @@ async function deleteAllUsers() {
 }
 
 deleteAllUsers();
-

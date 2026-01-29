@@ -5,12 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { UserRole, Langue } from "@/lib/generated/prisma/index.js";
 
-
 // Extract palmares initialization logic
-export async function initializePalmaresForUser(userId: string, userLangue: string) {
+export async function initializePalmaresForUser(userId: string) {
   try {
     console.log("Starting palmares initialization for user:", userId);
-    
+
     // Check if palmares already exists for this user
     const existingPalmares = await prisma.palmares.findFirst({
       where: { userId },
@@ -24,40 +23,46 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
 
     // First, let's check what records exist in the database
     const allStages = await prisma.stage.findMany({
-      orderBy: { numOrder: 'asc' },
+      orderBy: { numOrder: "asc" },
     });
-    console.log("All stages in DB:", allStages.map(s => ({ title: s.title, status: s.statusStage })));
+    console.log(
+      "All stages in DB:",
+      allStages.map((s) => ({ title: s.title, status: s.statusStage })),
+    );
 
     const allSections = await prisma.section.findMany({
-      orderBy: { numOrder: 'asc' },
+      orderBy: { numOrder: "asc" },
     });
-    console.log("All sections in DB:", allSections.map(s => ({ title: s.title, status: s.statusSection })));
+    console.log(
+      "All sections in DB:",
+      allSections.map((s) => ({ title: s.title, status: s.statusSection })),
+    );
 
     // Try to find stage with CURRENT status, fallback to first stage
     let stage1 = await prisma.stage.findFirst({
-      where: { 
-        statusStage: "CURRENT" 
+      where: {
+        statusStage: "CURRENT",
       },
-      orderBy: { numOrder: 'asc' },
+      orderBy: { numOrder: "asc" },
     });
 
     if (!stage1) {
       stage1 = await prisma.stage.findFirst({
-        orderBy: { numOrder: 'asc' },
+        orderBy: { numOrder: "asc" },
       });
     }
 
     // Try to find section with CURRENT status, fallback to first section
     let section1 = await prisma.section.findFirst({
-      where: { 
-        statusSection: "CURRENT" 
+      where: {
+        statusSection: "CURRENT",
       },
-      orderBy: { numOrder: 'asc' },
+      orderBy: { numOrder: "asc" },
     });
 
     if (!section1) {
       section1 = await prisma.section.findFirst({
-        orderBy: { numOrder: 'asc' },
+        orderBy: { numOrder: "asc" },
       });
     }
 
@@ -67,7 +72,7 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
         stageId: stage1?.id,
         sectionId: section1?.id,
       },
-      orderBy: { numOrder: 'asc' },
+      orderBy: { numOrder: "asc" },
     });
 
     // If no jeu found with both stage and section, try just with stage
@@ -77,38 +82,41 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
         where: {
           stageId: stage1.id,
         },
-        orderBy: { numOrder: 'asc' },
+        orderBy: { numOrder: "asc" },
       });
     }
 
-    console.log("Debug - stage1:", stage1?.title, "section1:", section1?.title, "jeu:", jeu?.id);
+    console.log(
+      "Debug - stage1:",
+      stage1?.title,
+      "section1:",
+      section1?.title,
+      "jeu:",
+      jeu?.id,
+    );
 
     if (stage1 && section1 && jeu) {
       const palmares = await prisma.palmares.create({
         data: {
           userId,
-          stageId: stage1.id,
-          statusStage: "CURRENT",
-          stageNumOrder: stage1.numOrder,
+          compteurJeu: 1,
           stageLength: 1,
-          sectionId: section1.id,
-          statusSection: "CURRENT",
-          sectionNumOrder: section1.numOrder,
-          jeuId: jeu.id,
-          statusJeu: "CURRENT",
-          niveauJeu: `${stage1.title}-${section1.title}`,
-          langue: (userLangue as Langue) || Langue.FR,
-          numOrder: 1,
-          jeuValide: false,
           score: 0,
-          isFinished: false,
+          jeuValide: false,
         },
       });
       console.log("Palmares created successfully:", palmares.id);
       return true;
     }
 
-    console.log("Could not create palmares - missing required records. Stage:", !!stage1, "Section:", !!section1, "Jeu:", !!jeu);
+    console.log(
+      "Could not create palmares - missing required records. Stage:",
+      !!stage1,
+      "Section:",
+      !!section1,
+      "Jeu:",
+      !!jeu,
+    );
     return false;
   } catch (error) {
     console.error("Error creating palmares:", error);
@@ -123,7 +131,7 @@ export async function createEmployee(
     phone?: string;
     country?: string;
     langue?: string;
-  }
+  },
 ) {
   try {
     const user = await (await clerkClient()).users.getUser(clerkId);
@@ -131,7 +139,9 @@ export async function createEmployee(
       throw new Error("User not found");
     }
 
-    await (await clerkClient()).users.updateUserMetadata(user.id, {
+    await (
+      await clerkClient()
+    ).users.updateUserMetadata(user.id, {
       publicMetadata: {
         onboardingCompleted: true,
         role: role,
@@ -155,7 +165,7 @@ export async function createEmployee(
     });
 
     // Initialize palmares for new user
-    await initializePalmaresForUser(newUser.id, formData.langue || "FR");
+    await initializePalmaresForUser(newUser.id);
 
     revalidatePath("/onboarding");
 
@@ -169,5 +179,3 @@ export async function createEmployee(
     };
   }
 }
-
-

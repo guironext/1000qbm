@@ -148,9 +148,7 @@ export default function QuestionFlow({
               <Button
                 className="w-full max-w-sm bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-bold py-6 px-8 rounded-xl shadow-lg transform transition-transform hover:scale-[1.02]"
                 onClick={() => {
-                  const jeuNiveauString =
-                    `${niveau || ""} ${jeuTitle || ""}`.trim();
-                  // handleVictory(score, jeuNiveauString); // Removed as per instruction
+                  window.location.reload();
                 }}
               >
                 Réessayer

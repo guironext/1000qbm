@@ -168,3 +168,64 @@ export async function handleVictory(score: number, jeuNiveau: string) {
   // 5. Redirect
   redirect(redirectPath);
 }
+
+export async function getHeaderData() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    include: {
+      palmares: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  // Collect all unique jeu orders from palmares
+  const jeuOrders = [...new Set(user.palmares.map((p) => p.compteurJeu))];
+
+  // Fetch all related Jeux
+  const jeux = await prisma.jeu.findMany({
+    where: {
+      numOrder: { in: jeuOrders },
+    },
+    include: {
+      stage: true,
+      section: true,
+    },
+  });
+
+  // Create a map for quick lookup
+  const jeuMap = new Map(jeux.map((j) => [j.numOrder, j]));
+
+  // Stich data together for the frontend
+  const palmaresWithJeux = user.palmares.map((p) => ({
+    ...p,
+    jeu: jeuMap.get(p.compteurJeu) || null,
+  }));
+
+  const currentPalmaresObj = user.palmares.find((p) => !p.jeuValide) || null;
+
+  const currentPalmares = currentPalmaresObj
+    ? {
+        ...currentPalmaresObj,
+        jeu: jeuMap.get(currentPalmaresObj.compteurJeu) || null,
+      }
+    : null;
+
+  return {
+    user: {
+      ...user,
+      palmares: palmaresWithJeux,
+    },
+    currentPalmares,
+  };
+}

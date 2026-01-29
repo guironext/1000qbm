@@ -16,8 +16,8 @@ export default async function EmboardPage() {
           Erreur ou Fin du Jeu
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
-          Impossible de trouver l'étape actuelle. Veuillez contacter le support
-          si le problème persiste.
+          comprendre l&apos;étape actuelle. Veuillez contacter le support si le
+          problème persiste.
         </p>
       </div>
     );
@@ -86,7 +86,7 @@ export default async function EmboardPage() {
               size="lg"
               className="w-full py-8 text-xl font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/30 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 transform transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-xl"
             >
-              Commençons l'aventure
+              Commençons l&apos;aventure
             </Button>
           </form>
         </div>

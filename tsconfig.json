@@ -33,8 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/(dashboard)/admin/stages",
-    "next-env.d.ts",
-    "build/types/**/*.ts"
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules"

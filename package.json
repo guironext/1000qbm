@@ -8,7 +8,8 @@
     "build:static": "next build && next export",
     "start": "next start",
     "lint": "next lint",
-    "delete-all-users": "node scripts/delete-all-users.js"
+    "delete-all-users": "node scripts/delete-all-users.js",
+    "clean": "rmdir /s /q .next 2>nul & rmdir /s /q build 2>nul"
   },
   "dependencies": {
     "@clerk/localizations": "^3.20.3",
