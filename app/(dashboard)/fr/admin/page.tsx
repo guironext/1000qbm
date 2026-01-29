@@ -1,22 +1,41 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Users, 
-  Gamepad2, 
-  BookOpen, 
-  Trophy, 
-  Plus, 
-  Edit, 
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Users,
+  Gamepad2,
+  BookOpen,
+  Trophy,
+  Plus,
+  Edit,
   Trash2,
   BarChart3,
   TrendingUp,
@@ -27,13 +46,13 @@ import {
   Zap,
   Upload,
   Image as ImageIcon,
-  X
-} from 'lucide-react';
-import { getAllStages } from '@/lib/actions/getAllStages';
-import { getAllSections } from '@/lib/actions/getAllSections';
-import { getAllJeux } from '@/lib/actions/getAllJeux';
+  X,
+} from "lucide-react";
+import { getAllStages } from "@/lib/actions/getAllStages";
+import { getAllSections } from "@/lib/actions/getAllSections";
+import { getAllJeux } from "@/lib/actions/getAllJeux";
 import { toast } from "sonner";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 interface DashboardStats {
   totalUsers: number;
@@ -52,7 +71,7 @@ interface Stage {
   image: string;
   numOrder: number;
   langue: string;
-  descriptions?: { id: string; texte: string; }[]; // Add this line
+  descriptions?: { id: string; texte: string }[]; // Add this line
   sections?: {
     id: string;
     title: string;
@@ -91,7 +110,7 @@ interface Jeu {
   sectionId: string | null;
   stage?: Stage | null;
   section?: Section | null;
-  questions?: Question[];  // Replace any[] with Question[]
+  questions?: Question[]; // Replace any[] with Question[]
 }
 
 // Add Question interface if not already defined
@@ -122,7 +141,7 @@ const AdminDashboard = () => {
     totalGames: 0,
     totalQuestions: 0,
     totalScores: 0,
-    averageScore: 0
+    averageScore: 0,
   });
   const [stages, setStages] = useState<Stage[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
@@ -131,93 +150,98 @@ const AdminDashboard = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    title: '',
-    niveau: '',
-    image: '',
+    title: "",
+    niveau: "",
+    image: "",
     numOrder: 0,
-    langue: 'FR',
-    descriptions: [] as string[] // Change from description to descriptions array
+    langue: "FR",
+    descriptions: [] as string[], // Change from description to descriptions array
   });
   const [addFormData, setAddFormData] = useState({
-    title: '',
-    niveau: '',
-    image: '',
+    title: "",
+    niveau: "",
+    image: "",
     numOrder: 0,
-    langue: 'FR',
-    descriptions: [] as string[] // Change from description to descriptions array
+    langue: "FR",
+    descriptions: [] as string[], // Change from description to descriptions array
   });
   const [isUploading, setIsUploading] = useState(false);
   const [isAddSectionDialogOpen, setIsAddSectionDialogOpen] = useState(false);
   const [addSectionFormData, setAddSectionFormData] = useState({
-    title: '',
-    niveau: '',
-    image: '',
+    title: "",
+    niveau: "",
+    image: "",
     numOrder: 0,
-    langue: 'FR'
+    langue: "FR",
   });
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [isEditSectionDialogOpen, setIsEditSectionDialogOpen] = useState(false);
   const [editSectionFormData, setEditSectionFormData] = useState({
-    title: '',
-    niveau: '',
-    image: '',
+    title: "",
+    niveau: "",
+    image: "",
     numOrder: 0,
-    langue: 'FR',
-    descriptions: [] as string[] // Change from description to descriptions array
+    langue: "FR",
+    descriptions: [] as string[], // Change from description to descriptions array
   });
   const [jeux, setJeux] = useState<Jeu[]>([]);
   const [isAddJeuDialogOpen, setIsAddJeuDialogOpen] = useState(false);
   const [addJeuFormData, setAddJeuFormData] = useState({
-    langue: 'FR',
-    image: '',
-    niveau: '',
+    langue: "FR",
+    image: "",
+    niveau: "",
     numOrder: 0,
-    stageId: '',
-    sectionId: ''
+    stageId: "",
+    sectionId: "",
   });
   const [selectedJeu, setSelectedJeu] = useState<Jeu | null>(null);
   const [editingJeu, setEditingJeu] = useState<Jeu | null>(null);
   const [isEditJeuDialogOpen, setIsEditJeuDialogOpen] = useState(false);
   const [editJeuFormData, setEditJeuFormData] = useState({
-    langue: 'FR',
-    image: '',
-    niveau: '',
+    langue: "FR",
+    image: "",
+    niveau: "",
     numOrder: 0,
-    stageId: '',
-    sectionId: ''
+    stageId: "",
+    sectionId: "",
   });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isAddQuestionDialogOpen, setIsAddQuestionDialogOpen] = useState(false);
   const [addQuestionFormData, setAddQuestionFormData] = useState({
-    intitule: '',
-    langue: 'FR',
+    intitule: "",
+    langue: "FR",
     orderNum: 0,
-    jeuId: '',
-    reponses: [] as { intitule: string; isCorrect: boolean; langue: string }[]
+    jeuId: "",
+    reponses: [] as { intitule: string; isCorrect: boolean; langue: string }[],
   });
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [isEditQuestionDialogOpen, setIsEditQuestionDialogOpen] = useState(false);
+  const [isEditQuestionDialogOpen, setIsEditQuestionDialogOpen] =
+    useState(false);
   const [editQuestionFormData, setEditQuestionFormData] = useState({
-    intitule: '',
-    langue: 'FR',
+    intitule: "",
+    langue: "FR",
     orderNum: 0,
-    jeuId: '',
-    reponses: [] as { intitule: string; isCorrect: boolean; langue: string }[]
+    jeuId: "",
+    reponses: [] as { intitule: string; isCorrect: boolean; langue: string }[],
   });
 
   const languageOptions = [
-    { value: 'FR', label: 'Français' },
-    { value: 'EN', label: 'English' },
-    { value: 'ES', label: 'Español' },
-    { value: 'PT', label: 'Português' },
-    { value: 'DE', label: 'Deutsch' }
+    { value: "FR", label: "Français" },
+    { value: "EN", label: "English" },
+    { value: "ES", label: "Español" },
+    { value: "PT", label: "Português" },
+    { value: "DE", label: "Deutsch" },
   ];
 
   const getJeuNiveau = () => {
-    const selectedStage = stages.find(stage => stage.id === addJeuFormData.stageId);
-    const selectedSection = sections.find(section => section.id === addJeuFormData.sectionId);
-    
-    let niveauValue = '';
+    const selectedStage = stages.find(
+      (stage) => stage.id === addJeuFormData.stageId,
+    );
+    const selectedSection = sections.find(
+      (section) => section.id === addJeuFormData.sectionId,
+    );
+
+    let niveauValue = "";
     if (selectedStage && selectedSection) {
       niveauValue = `${selectedStage.niveau}-${selectedSection.niveau}`;
     } else if (selectedStage) {
@@ -225,20 +249,24 @@ const AdminDashboard = () => {
     } else if (selectedSection) {
       niveauValue = selectedSection.niveau;
     }
-    
+
     // Update the form data with the calculated niveau
     if (niveauValue !== addJeuFormData.niveau) {
-      setAddJeuFormData({...addJeuFormData, niveau: niveauValue});
+      setAddJeuFormData({ ...addJeuFormData, niveau: niveauValue });
     }
-    
+
     return niveauValue;
   };
 
   const getEditJeuNiveau = () => {
-    const selectedStage = stages.find(stage => stage.id === editJeuFormData.stageId);
-    const selectedSection = sections.find(section => section.id === editJeuFormData.sectionId);
-    
-    let niveauValue = '';
+    const selectedStage = stages.find(
+      (stage) => stage.id === editJeuFormData.stageId,
+    );
+    const selectedSection = sections.find(
+      (section) => section.id === editJeuFormData.sectionId,
+    );
+
+    let niveauValue = "";
     if (selectedStage && selectedSection) {
       niveauValue = `${selectedStage.niveau}-${selectedSection.niveau}`;
     } else if (selectedStage) {
@@ -246,26 +274,26 @@ const AdminDashboard = () => {
     } else if (selectedSection) {
       niveauValue = selectedSection.niveau;
     }
-    
+
     // Update the form data with the calculated niveau
     if (niveauValue !== editJeuFormData.niveau) {
-      setEditJeuFormData({...editJeuFormData, niveau: niveauValue});
+      setEditJeuFormData({ ...editJeuFormData, niveau: niveauValue });
     }
-    
+
     return niveauValue;
   };
 
   // Add this helper function after the getJeuNiveau function (around line 200)
   const getImageUrl = (imagePath: string | null) => {
-    if (!imagePath) return '';
+    if (!imagePath) return "";
 
     // If it's already a full URL (https), return as is
-    if (imagePath.startsWith('http')) {
+    if (imagePath.startsWith("http")) {
       return imagePath;
     }
 
     // If it's a relative path starting with '/', return as is
-    if (imagePath.startsWith('/')) {
+    if (imagePath.startsWith("/")) {
       return imagePath;
     }
 
@@ -283,7 +311,7 @@ const AdminDashboard = () => {
       const [stagesData, sectionsData, jeuxData] = await Promise.all([
         getAllStages(),
         getAllSections(),
-        getAllJeux()
+        getAllJeux(),
       ]);
 
       setStages(stagesData);
@@ -299,10 +327,10 @@ const AdminDashboard = () => {
         totalGames,
         totalQuestions: 0,
         totalScores: 0,
-        averageScore: 0
+        averageScore: 0,
       });
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error("Error loading dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -315,8 +343,8 @@ const AdminDashboard = () => {
       niveau: stage.niveau,
       image: stage.image,
       numOrder: stage.numOrder,
-      langue: stage.langue || 'FR',
-      descriptions: stage.descriptions?.map(p => p.texte) || [] // Convert descriptions to array
+      langue: stage.langue || "FR",
+      descriptions: stage.descriptions?.map((p) => p.texte) || [], // Convert descriptions to array
     });
     setIsEditDialogOpen(true);
   };
@@ -325,27 +353,27 @@ const AdminDashboard = () => {
     if (!editingStage) return;
 
     try {
-      const response = await fetch('/api/stage', {
-        method: 'PUT',
+      const response = await fetch("/api/stage", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: editingStage.id,
-          ...editFormData
+          ...editFormData,
         }),
       });
 
       if (response.ok) {
-        toast.success('Stage modifié avec succès!');
+        toast.success("Stage modifié avec succès!");
         await loadDashboardData();
         setIsEditDialogOpen(false);
         setEditingStage(null);
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -355,40 +383,44 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to update stage:', errorMessage);
-        toast.error('Erreur lors de la modification du stage: ' + errorMessage);
+
+        console.error("Failed to update stage:", errorMessage);
+        toast.error("Erreur lors de la modification du stage: " + errorMessage);
       }
     } catch (error) {
-      console.error('Error updating stage:', error);
-      toast.error('Erreur lors de la modification du stage');
+      console.error("Error updating stage:", error);
+      toast.error("Erreur lors de la modification du stage");
     }
   };
 
   const handleDeleteStage = async (stageId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce stage ? Cette action supprimera également toutes les sections et jeux associés.')) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer ce stage ? Cette action supprimera également toutes les sections et jeux associés.",
+      )
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`/api/stage?id=${stageId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Stage supprimé avec succès!!');
+        toast.success("Stage supprimé avec succès!!");
         await loadDashboardData();
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.details || error.error || errorMessage;
@@ -398,30 +430,30 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to delete stage:', errorMessage);
-        toast.error('Erreur lors de la suppression du stage: ' + errorMessage);
+
+        console.error("Failed to delete stage:", errorMessage);
+        toast.error("Erreur lors de la suppression du stage: " + errorMessage);
       }
     } catch (error) {
-      console.error('Error deleting stage:', error);
-      toast.error('Erreur lors de la suppression du stage');
+      console.error("Error deleting stage:", error);
+      toast.error("Erreur lors de la suppression du stage");
     }
   };
 
   const handleAddStage = () => {
     setAddFormData({
-      title: '',
-      niveau: '',
-      image: '',
+      title: "",
+      niveau: "",
+      image: "",
       numOrder: stages.length + 1,
-      langue: 'FR',
-      descriptions: []
+      langue: "FR",
+      descriptions: [],
     });
     setIsAddDialogOpen(true);
   };
@@ -429,28 +461,37 @@ const AdminDashboard = () => {
   const handleSaveNewStage = async () => {
     try {
       if (!addFormData.title || !addFormData.niveau) {
-        toast.error('Veuillez remplir tous les champs obligatoires (titre et niveau)');
+        toast.error(
+          "Veuillez remplir tous les champs obligatoires (titre et niveau)",
+        );
         return;
       }
 
-      const response = await fetch('/api/stage', {
-        method: 'POST',
+      const response = await fetch("/api/stage", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(addFormData),
       });
 
       if (response.ok) {
-        toast.success('Stage créé avec succès!');
+        toast.success("Stage créé avec succès!");
         await loadDashboardData();
         setIsAddDialogOpen(false);
-        setAddFormData({ title: '', niveau: '', image: '', numOrder: 0, langue: 'FR', descriptions: [] });
+        setAddFormData({
+          title: "",
+          niveau: "",
+          image: "",
+          numOrder: 0,
+          langue: "FR",
+          descriptions: [],
+        });
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -460,55 +501,60 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to create stage:', errorMessage);
-        toast.error('Erreur lors de la création du stage: ' + errorMessage);
+
+        console.error("Failed to create stage:", errorMessage);
+        toast.error("Erreur lors de la création du stage: " + errorMessage);
       }
     } catch (error) {
-      console.error('Error creating stage:', error);
-      toast.error('Erreur lors de la création du stage');
+      console.error("Error creating stage:", error);
+      toast.error("Erreur lors de la création du stage");
     }
   };
 
-  const handleImageUpload = async (file: File, formType: 'stage' | 'section' = 'stage') => {
+  const handleImageUpload = async (
+    file: File,
+    formType: "stage" | "section" = "stage",
+  ) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('/api/loadImage', {
-        method: 'POST',
+      formData.append("image", file);
+
+      const response = await fetch("/api/loadImage", {
+        method: "POST",
         body: formData,
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        if (formType === 'stage') {
-          setAddFormData({...addFormData, image: result.url});
+        if (formType === "stage") {
+          setAddFormData({ ...addFormData, image: result.url });
         } else {
-          setAddSectionFormData({...addSectionFormData, image: result.url});
+          setAddSectionFormData({ ...addSectionFormData, image: result.url });
         }
-        toast.success('Image téléchargée avec succès!');
+        toast.success("Image téléchargée avec succès!");
       } else {
         try {
           const errorData = await response.json();
-          console.error('Error response:', errorData);
-          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorData);
+          toast.error(
+            errorData.error || "Erreur lors du téléchargement de l'image",
+          );
         } catch {
           const errorText = await response.text();
-          console.error('Error response:', errorText);
-          toast.error('Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorText);
+          toast.error("Erreur lors du téléchargement de l'image");
         }
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Erreur lors du téléchargement de l\'image');
+      console.error("Error uploading image:", error);
+      toast.error("Erreur lors du téléchargement de l'image");
     } finally {
       setIsUploading(false);
     }
@@ -523,11 +569,11 @@ const AdminDashboard = () => {
 
   const handleAddSection = () => {
     setAddSectionFormData({
-      title: '',
-      niveau: '',
-      image: '',
+      title: "",
+      niveau: "",
+      image: "",
       numOrder: sections.length + 1,
-      langue: 'FR'
+      langue: "FR",
     });
     setIsAddSectionDialogOpen(true);
   };
@@ -535,29 +581,37 @@ const AdminDashboard = () => {
   const handleSaveNewSection = async () => {
     try {
       if (!addSectionFormData.title || !addSectionFormData.niveau) {
-        toast.error('Veuillez remplir tous les champs obligatoires (titre et niveau)');
+        toast.error(
+          "Veuillez remplir tous les champs obligatoires (titre et niveau)",
+        );
         return;
       }
 
-      const response = await fetch('/api/section', {
-        method: 'POST',
+      const response = await fetch("/api/section", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(addSectionFormData),
       });
 
       if (response.ok) {
         await response.json();
-        toast.success('Section créée avec succès!');
+        toast.success("Section créée avec succès!");
         await loadDashboardData();
         setIsAddSectionDialogOpen(false);
-        setAddSectionFormData({ title: '', niveau: '', image: '', numOrder: 0, langue: 'FR' });
+        setAddSectionFormData({
+          title: "",
+          niveau: "",
+          image: "",
+          numOrder: 0,
+          langue: "FR",
+        });
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -567,19 +621,21 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to create section:', errorMessage);
-        toast.error('Erreur lors de la création de la section: ' + errorMessage);
+
+        console.error("Failed to create section:", errorMessage);
+        toast.error(
+          "Erreur lors de la création de la section: " + errorMessage,
+        );
       }
     } catch (error) {
-      console.error('Error creating section:', error);
-      toast.error('Erreur lors de la création de la section');
+      console.error("Error creating section:", error);
+      toast.error("Erreur lors de la création de la section");
     }
   };
 
@@ -590,8 +646,8 @@ const AdminDashboard = () => {
       niveau: section.niveau,
       image: section.image,
       numOrder: section.numOrder,
-      langue: section.langue || 'FR',
-      descriptions: []
+      langue: section.langue || "FR",
+      descriptions: [],
     });
     setIsEditSectionDialogOpen(true);
   };
@@ -600,27 +656,27 @@ const AdminDashboard = () => {
     if (!editingSection) return;
 
     try {
-      const response = await fetch('/api/section', {
-        method: 'PUT',
+      const response = await fetch("/api/section", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: editingSection.id,
-          ...editSectionFormData
+          ...editSectionFormData,
         }),
       });
 
       if (response.ok) {
-        toast.success('Section modifiée avec succès!');
+        toast.success("Section modifiée avec succès!");
         await loadDashboardData();
         setIsEditSectionDialogOpen(false);
         setEditingSection(null);
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -630,53 +686,59 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to update section:', errorMessage);
-        toast.error('Erreur lors de la modification de la section: ' + errorMessage);
+
+        console.error("Failed to update section:", errorMessage);
+        toast.error(
+          "Erreur lors de la modification de la section: " + errorMessage,
+        );
       }
     } catch (error) {
-      console.error('Error updating section:', error);
-      toast.error('Erreur lors de la modification de la section');
+      console.error("Error updating section:", error);
+      toast.error("Erreur lors de la modification de la section");
     }
   };
 
   const handleDeleteSection = async (sectionId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette section ? Cette action supprimera également tous les jeux associés.')) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer cette section ? Cette action supprimera également tous les jeux associés.",
+      )
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`/api/section?id=${sectionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Section supprimée avec succès!');
+        toast.success("Section supprimée avec succès!");
         await loadDashboardData();
       } else {
-        console.error('Failed to delete section');
-        toast.error('Erreur lors de la suppression de la section');
+        console.error("Failed to delete section");
+        toast.error("Erreur lors de la suppression de la section");
       }
     } catch (error) {
-      console.error('Error deleting section:', error);
-      toast.error('Erreur lors de la suppression de la section');
+      console.error("Error deleting section:", error);
+      toast.error("Erreur lors de la suppression de la section");
     }
   };
 
   const handleAddJeu = () => {
     setAddJeuFormData({
-      langue: 'FR',
-      image: '',
-      niveau: '',
+      langue: "FR",
+      image: "",
+      niveau: "",
       numOrder: jeux.length + 1,
-      stageId: '',
-      sectionId: ''
+      stageId: "",
+      sectionId: "",
     });
     setIsAddJeuDialogOpen(true);
   };
@@ -684,30 +746,37 @@ const AdminDashboard = () => {
   const handleSaveNewJeu = async () => {
     try {
       if (!addJeuFormData.niveau || !addJeuFormData.stageId) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
+        toast.error("Veuillez remplir tous les champs obligatoires");
         return;
       }
 
-      const response = await fetch('/api/jeu', {
-        method: 'POST',
+      const response = await fetch("/api/jeu", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(addJeuFormData),
       });
 
       if (response.ok) {
-        toast.success('Jeu créé avec succès!');
+        toast.success("Jeu créé avec succès!");
         await loadDashboardData();
         setIsAddJeuDialogOpen(false);
-        setAddJeuFormData({ langue: 'FR', image: '', niveau: '', numOrder: 0, stageId: '', sectionId: '' });
+        setAddJeuFormData({
+          langue: "FR",
+          image: "",
+          niveau: "",
+          numOrder: 0,
+          stageId: "",
+          sectionId: "",
+        });
       } else {
         const error = await response.json();
-        toast.error('Erreur lors de la création du jeu: ' + error.error);
+        toast.error("Erreur lors de la création du jeu: " + error.error);
       }
     } catch (error) {
-      console.error('Error creating jeu:', error);
-      toast.error('Erreur lors de la création du jeu');
+      console.error("Error creating jeu:", error);
+      toast.error("Erreur lors de la création du jeu");
     }
   };
 
@@ -716,32 +785,34 @@ const AdminDashboard = () => {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('/api/loadImage', {
-        method: 'POST',
+      formData.append("image", file);
+
+      const response = await fetch("/api/loadImage", {
+        method: "POST",
         body: formData,
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         // Store the full URL path, not just the filename
-        setAddJeuFormData({...addJeuFormData, image: result.url});
-        toast.success('Image téléchargée avec succès!');
+        setAddJeuFormData({ ...addJeuFormData, image: result.url });
+        toast.success("Image téléchargée avec succès!");
       } else {
         try {
           const errorData = await response.json();
-          console.error('Error response:', errorData);
-          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorData);
+          toast.error(
+            errorData.error || "Erreur lors du téléchargement de l'image",
+          );
         } catch {
           const errorText = await response.text();
-          console.error('Error response:', errorText);
-          toast.error('Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorText);
+          toast.error("Erreur lors du téléchargement de l'image");
         }
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Erreur lors du téléchargement de l\'image');
+      console.error("Error uploading image:", error);
+      toast.error("Erreur lors du téléchargement de l'image");
     } finally {
       setIsUploading(false);
     }
@@ -755,11 +826,11 @@ const AdminDashboard = () => {
         const questionsData = await response.json();
         setQuestions(questionsData);
       } else {
-        console.error('Failed to fetch questions');
+        console.error("Failed to fetch questions");
         setQuestions([]);
       }
     } catch (error) {
-      console.error('Error fetching questions:', error);
+      console.error("Error fetching questions:", error);
       setQuestions([]);
     }
   };
@@ -768,11 +839,11 @@ const AdminDashboard = () => {
     setEditingJeu(jeu);
     setEditJeuFormData({
       langue: jeu.langue,
-      image: jeu.image || '',
+      image: jeu.image || "",
       niveau: jeu.niveau,
       numOrder: jeu.numOrder,
       stageId: jeu.stageId,
-      sectionId: jeu.sectionId || ''
+      sectionId: jeu.sectionId || "",
     });
     setIsEditJeuDialogOpen(true);
   };
@@ -783,11 +854,11 @@ const AdminDashboard = () => {
     try {
       // Calculate niveau based on selected stage/section
       const niveauValue = getEditJeuNiveau();
-      
-      const response = await fetch('/api/jeu', {
-        method: 'PUT',
+
+      const response = await fetch("/api/jeu", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: editingJeu.id,
@@ -796,28 +867,28 @@ const AdminDashboard = () => {
           niveau: niveauValue || editJeuFormData.niveau,
           numOrder: editJeuFormData.numOrder,
           stageId: editJeuFormData.stageId,
-          sectionId: editJeuFormData.sectionId || null
+          sectionId: editJeuFormData.sectionId || null,
         }),
       });
 
       if (response.ok) {
-        toast.success('Jeu modifié avec succès!');
+        toast.success("Jeu modifié avec succès!");
         await loadDashboardData();
         setIsEditJeuDialogOpen(false);
         setEditingJeu(null);
         // Refresh selected jeu if it was the one being edited
         if (selectedJeu?.id === editingJeu.id) {
           const updatedJeux = await getAllJeux();
-          const updatedJeu = updatedJeux.find(j => j.id === editingJeu.id);
+          const updatedJeu = updatedJeux.find((j) => j.id === editingJeu.id);
           if (updatedJeu) {
             await handleSelectJeu(updatedJeu);
           }
         }
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -827,34 +898,38 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to update jeu:', errorMessage);
-        toast.error('Erreur lors de la modification du jeu: ' + errorMessage);
+
+        console.error("Failed to update jeu:", errorMessage);
+        toast.error("Erreur lors de la modification du jeu: " + errorMessage);
       }
     } catch (error) {
-      console.error('Error updating jeu:', error);
-      toast.error('Erreur lors de la modification du jeu');
+      console.error("Error updating jeu:", error);
+      toast.error("Erreur lors de la modification du jeu");
     }
   };
 
   const handleDeleteJeu = async (jeuId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce jeu ? Cette action supprimera également toutes les questions associées.')) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer ce jeu ? Cette action supprimera également toutes les questions associées.",
+      )
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`/api/jeu?id=${jeuId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Jeu supprimé avec succès!');
+        toast.success("Jeu supprimé avec succès!");
         await loadDashboardData();
         // Clear selected jeu if it was deleted
         if (selectedJeu?.id === jeuId) {
@@ -862,10 +937,10 @@ const AdminDashboard = () => {
           setQuestions([]);
         }
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -875,19 +950,19 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to delete jeu:', errorMessage);
-        toast.error('Erreur lors de la suppression du jeu: ' + errorMessage);
+
+        console.error("Failed to delete jeu:", errorMessage);
+        toast.error("Erreur lors de la suppression du jeu: " + errorMessage);
       }
     } catch (error) {
-      console.error('Error deleting jeu:', error);
-      toast.error('Erreur lors de la suppression du jeu');
+      console.error("Error deleting jeu:", error);
+      toast.error("Erreur lors de la suppression du jeu");
     }
   };
 
@@ -895,31 +970,33 @@ const AdminDashboard = () => {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('/api/loadImage', {
-        method: 'POST',
+      formData.append("image", file);
+
+      const response = await fetch("/api/loadImage", {
+        method: "POST",
         body: formData,
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        setEditJeuFormData({...editJeuFormData, image: result.url});
-        toast.success('Image téléchargée avec succès!');
+        setEditJeuFormData({ ...editJeuFormData, image: result.url });
+        toast.success("Image téléchargée avec succès!");
       } else {
         try {
           const errorData = await response.json();
-          console.error('Error response:', errorData);
-          toast.error(errorData.error || 'Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorData);
+          toast.error(
+            errorData.error || "Erreur lors du téléchargement de l'image",
+          );
         } catch {
           const errorText = await response.text();
-          console.error('Error response:', errorText);
-          toast.error('Erreur lors du téléchargement de l\'image');
+          console.error("Error response:", errorText);
+          toast.error("Erreur lors du téléchargement de l'image");
         }
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Erreur lors du téléchargement de l\'image');
+      console.error("Error uploading image:", error);
+      toast.error("Erreur lors du téléchargement de l'image");
     } finally {
       setIsUploading(false);
     }
@@ -927,20 +1004,19 @@ const AdminDashboard = () => {
 
   const handleAddQuestion = () => {
     if (!selectedJeu) {
-      toast.error('Veuillez sélectionner un jeu d\'abord');
+      toast.error("Veuillez sélectionner un jeu d'abord");
       return;
     }
-    
+
     setAddQuestionFormData({
-      intitule: '',
+      intitule: "",
       langue: selectedJeu.langue,
       orderNum: questions.length + 1,
       jeuId: selectedJeu.id,
       reponses: [
-        { intitule: '', isCorrect: true, langue: selectedJeu.langue },
-        { intitule: '', isCorrect: false, langue: selectedJeu.langue },
-      
-      ]
+        { intitule: "", isCorrect: true, langue: selectedJeu.langue },
+        { intitule: "", isCorrect: false, langue: selectedJeu.langue },
+      ],
     });
     setIsAddQuestionDialogOpen(true);
   };
@@ -948,65 +1024,67 @@ const AdminDashboard = () => {
   const handleSaveNewQuestion = async () => {
     try {
       if (!addQuestionFormData.intitule || !addQuestionFormData.jeuId) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
+        toast.error("Veuillez remplir tous les champs obligatoires");
         return;
       }
 
-      const response = await fetch('/api/question', {
-        method: 'POST',
+      const response = await fetch("/api/question", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(addQuestionFormData),
       });
 
       if (response.ok) {
-        toast.success('Question créée avec succès!');
+        toast.success("Question créée avec succès!");
         // Refresh questions for the selected jeu
         if (selectedJeu) {
           await handleSelectJeu(selectedJeu);
         }
         setIsAddQuestionDialogOpen(false);
         setAddQuestionFormData({
-          intitule: '',
-          langue: 'FR',
+          intitule: "",
+          langue: "FR",
           orderNum: 0,
-          jeuId: '',
-          reponses: []
+          jeuId: "",
+          reponses: [],
         });
       } else {
         const error = await response.json();
-        toast.error('Erreur lors de la création de la question: ' + error.error);
+        toast.error(
+          "Erreur lors de la création de la question: " + error.error,
+        );
       }
     } catch (error) {
-      console.error('Error creating question:', error);
-      toast.error('Erreur lors de la création de la question');
+      console.error("Error creating question:", error);
+      toast.error("Erreur lors de la création de la question");
     }
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette question ?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/question?id=${questionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Question supprimée avec succès!');
+        toast.success("Question supprimée avec succès!");
         // Refresh questions for the selected jeu
         if (selectedJeu) {
           await handleSelectJeu(selectedJeu);
         }
       } else {
-        console.error('Failed to delete question');
-        toast.error('Erreur lors de la suppression de la question');
+        console.error("Failed to delete question");
+        toast.error("Erreur lors de la suppression de la question");
       }
     } catch (error) {
-      console.error('Error deleting question:', error);
-      toast.error('Erreur lors de la suppression de la question');
+      console.error("Error deleting question:", error);
+      toast.error("Erreur lors de la suppression de la question");
     }
   };
 
@@ -1016,12 +1094,13 @@ const AdminDashboard = () => {
       intitule: question.intitule,
       langue: question.langue,
       orderNum: question.orderNum,
-      jeuId: question.jeuId || '',
-      reponses: question.reponses?.map(r => ({
-        intitule: r.intitule,
-        isCorrect: r.isCorrect,
-        langue: r.langue
-      })) || []
+      jeuId: question.jeuId || "",
+      reponses:
+        question.reponses?.map((r) => ({
+          intitule: r.intitule,
+          isCorrect: r.isCorrect,
+          langue: r.langue,
+        })) || [],
     });
     setIsEditQuestionDialogOpen(true);
   };
@@ -1031,26 +1110,26 @@ const AdminDashboard = () => {
 
     try {
       if (!editQuestionFormData.intitule || !editQuestionFormData.jeuId) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
+        toast.error("Veuillez remplir tous les champs obligatoires");
         return;
       }
 
-      const response = await fetch('/api/question', {
-        method: 'PUT',
+      const response = await fetch("/api/question", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: editingQuestion.id,
           intitule: editQuestionFormData.intitule,
           langue: editQuestionFormData.langue,
           orderNum: editQuestionFormData.orderNum,
-          jeuId: editQuestionFormData.jeuId
+          jeuId: editQuestionFormData.jeuId,
         }),
       });
 
       if (response.ok) {
-        toast.success('Question modifiée avec succès!');
+        toast.success("Question modifiée avec succès!");
         // Refresh questions for the selected jeu
         if (selectedJeu) {
           await handleSelectJeu(selectedJeu);
@@ -1058,10 +1137,10 @@ const AdminDashboard = () => {
         setIsEditQuestionDialogOpen(false);
         setEditingQuestion(null);
       } else {
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Erreur inconnue';
-        
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Erreur inconnue";
+
+        if (contentType && contentType.includes("application/json")) {
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
@@ -1071,30 +1150,32 @@ const AdminDashboard = () => {
         } else {
           try {
             const errorText = await response.text();
-            console.error('Non-JSON error response:', errorText);
+            console.error("Non-JSON error response:", errorText);
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           } catch {
             errorMessage = `Erreur ${response.status}: ${response.statusText}`;
           }
         }
-        
-        console.error('Failed to update question:', errorMessage);
-        toast.error('Erreur lors de la modification de la question: ' + errorMessage);
+
+        console.error("Failed to update question:", errorMessage);
+        toast.error(
+          "Erreur lors de la modification de la question: " + errorMessage,
+        );
       }
     } catch (error) {
-      console.error('Error updating question:', error);
-      toast.error('Erreur lors de la modification de la question');
+      console.error("Error updating question:", error);
+      toast.error("Erreur lors de la modification de la question");
     }
   };
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    description, 
-    icon, 
+  const StatCard = ({
+    title,
+    value,
+    description,
+    icon,
     trend,
     gradient,
-    iconColor
+    iconColor,
   }: {
     title: string;
     value: string | number;
@@ -1104,13 +1185,15 @@ const AdminDashboard = () => {
     gradient?: string;
     iconColor?: string;
   }) => (
-    <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${gradient}`}>
+    <Card
+      className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${gradient}`}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-        <CardTitle className="text-sm font-medium text-gray-700">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${iconColor}`}>
-          {icon}
-        </div>
+        <CardTitle className="text-sm font-medium text-gray-700">
+          {title}
+        </CardTitle>
+        <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
       </CardHeader>
       <CardContent className="relative z-10">
         <div className="text-3xl font-bold text-gray-900 mb-1">{value}</div>
@@ -1153,7 +1236,9 @@ const AdminDashboard = () => {
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                       Tableau de Bord Admin
                     </h1>
-                    <p className="text-lg text-gray-600">Gérez votre application 1000 QBM</p>
+                    <p className="text-lg text-gray-600">
+                      Gérez votre application 1000 QBM
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1212,32 +1297,41 @@ const AdminDashboard = () => {
           </div>
           <CardContent className="p-6">
             <div className="grid gap-6 md:grid-cols-3">
-              <Button 
-              onClick={() => router.push('/fr/admin/users')}
-              variant="outline" 
-              className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300 hover:bg-blue-50">
+              <Button
+                onClick={() => router.push("/fr/admin/users")}
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-blue-300 hover:bg-blue-50"
+              >
                 <div className="p-3 bg-blue-100 rounded-full">
                   <Users className="h-8 w-8 text-blue-600" />
                 </div>
-                <span className="font-semibold text-gray-700">Gérer les Joueurs</span>
+                <span className="font-semibold text-gray-700">
+                  Gérer les Joueurs
+                </span>
               </Button>
-              <Button 
-              onClick={() => router.push('/fr/admin/scores')}
-              variant="outline" 
-              className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-yellow-300 hover:bg-yellow-50">
+              <Button
+                onClick={() => router.push("/fr/admin/scores")}
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-yellow-300 hover:bg-yellow-50"
+              >
                 <div className="p-3 bg-yellow-100 rounded-full">
                   <Trophy className="h-8 w-8 text-yellow-600" />
                 </div>
-                <span className="font-semibold text-gray-700">Voir les Palmarès</span>
+                <span className="font-semibold text-gray-700">
+                  Voir les Palmarès
+                </span>
               </Button>
-              <Button 
-              onClick={() => router.push('/fr/admin/statistics')}
-              variant="outline" 
-              className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-green-300 hover:bg-green-50">
+              <Button
+                onClick={() => router.push("/fr/admin/statistics")}
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center space-y-3 hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 hover:border-green-300 hover:bg-green-50"
+              >
                 <div className="p-3 bg-green-100 rounded-full">
                   <BarChart3 className="h-8 w-8 text-green-600" />
                 </div>
-                <span className="font-semibold text-gray-700">Statistiques</span>
+                <span className="font-semibold text-gray-700">
+                  Statistiques
+                </span>
               </Button>
             </div>
           </CardContent>
@@ -1260,10 +1354,12 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Target className="h-4 w-4 text-amber-600" />
-                  <span className="text-sm font-medium text-gray-700">Total: {stages.length} stages</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Total: {stages.length} stages
+                  </span>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-md"
                   onClick={handleAddStage}
                 >
@@ -1273,39 +1369,53 @@ const AdminDashboard = () => {
               </div>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {stages.map((stage, index) => (
-                  <div key={stage.id} className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-amber-300">
+                  <div
+                    key={stage.id}
+                    className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-amber-300"
+                  >
                     <div className="flex items-center space-x-4">
                       <div className="relative">
-                        <Image 
-                          src={stage.image} 
-                          alt={stage.title}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 rounded-lg object-cover ring-2 ring-amber-100"
-                        />
+                        {stage.image ? (
+                          <Image
+                            src={getImageUrl(stage.image)}
+                            alt={stage.title}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-lg object-cover ring-2 ring-amber-100"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-amber-100 ring-2 ring-amber-100 flex items-center justify-center">
+                            <BookOpen className="h-6 w-6 text-amber-600" />
+                          </div>
+                        )}
                         <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                           {index + 1}
                         </div>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">{stage.title}</p>
-                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
+                        <p className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">
+                          {stage.title}
+                        </p>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-amber-100 text-amber-800 border-amber-200"
+                        >
                           Niveau {stage.niveau}
                         </Badge>
                       </div>
                     </div>
                     <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleEditStage(stage)}
                         className="hover:bg-amber-50 hover:border-amber-300"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
                         onClick={() => handleDeleteStage(stage.id)}
                       >
@@ -1333,10 +1443,12 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Target className="h-4 w-4 text-emerald-600" />
-                  <span className="text-sm font-medium text-gray-700">Total: {sections.length} sections</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Total: {sections.length} sections
+                  </span>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md"
                   onClick={handleAddSection}
                 >
@@ -1346,24 +1458,38 @@ const AdminDashboard = () => {
               </div>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {sections.map((section, index) => (
-                  <div key={section.id} className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-emerald-300">
+                  <div
+                    key={section.id}
+                    className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-emerald-300"
+                  >
                     <div className="flex items-center space-x-4">
                       <div className="relative">
-                        <Image 
-                          src={section.image} 
-                          alt={section.title}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 rounded-lg object-cover ring-2 ring-emerald-100"
-                        />
+                        {section.image ? (
+                          <Image
+                            src={getImageUrl(section.image)}
+                            alt={section.title}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-lg object-cover ring-2 ring-emerald-100"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-emerald-100 ring-2 ring-emerald-100 flex items-center justify-center">
+                            <Activity className="h-6 w-6 text-emerald-600" />
+                          </div>
+                        )}
                         <div className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                           {index + 1}
                         </div>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{section.title}</p>
+                        <p className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">
+                          {section.title}
+                        </p>
                         <div className="flex items-center space-x-2">
-                          <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200"
+                          >
                             Niveau {section.niveau}
                           </Badge>
                           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -1373,17 +1499,17 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleEditSection(section)}
                         className="hover:bg-emerald-50 hover:border-emerald-300"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
                         onClick={() => handleDeleteSection(section.id)}
                       >
@@ -1395,7 +1521,6 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
         </div>
 
         {/* Additional Management Cards */}
@@ -1415,10 +1540,12 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Target className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700">Total: {jeux.length} jeux</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Total: {jeux.length} jeux
+                  </span>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md"
                   onClick={handleAddJeu}
                 >
@@ -1434,16 +1561,16 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   jeux.map((jeu, index) => (
-                    <div 
-                      key={jeu.id} 
-                      className={`group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-blue-300 cursor-pointer ${selectedJeu?.id === jeu.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+                    <div
+                      key={jeu.id}
+                      className={`group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-blue-300 cursor-pointer ${selectedJeu?.id === jeu.id ? "ring-2 ring-blue-500 bg-blue-50" : ""}`}
                       onClick={() => handleSelectJeu(jeu)}
                     >
                       <div className="flex items-center space-x-4">
                         <div className="relative">
                           {jeu.image && (
-                            <Image 
-                              src={getImageUrl(jeu.image)} 
+                            <Image
+                              src={getImageUrl(jeu.image)}
                               alt={`Jeu ${jeu.niveau}`}
                               width={48}
                               height={48}
@@ -1456,10 +1583,14 @@ const AdminDashboard = () => {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                            Niveau Jeu = {jeu.stage?.niveau} / {jeu.section?.niveau || 'N/A'}
+                            Niveau Jeu = {jeu.stage?.niveau} /{" "}
+                            {jeu.section?.niveau || "N/A"}
                           </p>
                           <div className="flex items-center space-x-2">
-                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-blue-100 text-blue-800 border-blue-200"
+                            >
                               Niveau {jeu.niveau}
                             </Badge>
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -1503,10 +1634,8 @@ const AdminDashboard = () => {
                         </Button>
                       </div>
                     </div>
-                  )) 
-                  
+                  ))
                 )}
-                
               </div>
             </CardContent>
           </Card>
@@ -1519,7 +1648,9 @@ const AdminDashboard = () => {
                 Gestion des Questions
               </CardTitle>
               <CardDescription className="text-purple-100 mt-2">
-                {selectedJeu ? `Questions pour: ${selectedJeu.stage?.niveau} / ${selectedJeu.section?.niveau || 'N/A'}` : 'Sélectionnez un jeu pour gérer ses questions'}
+                {selectedJeu
+                  ? `Questions pour: ${selectedJeu.stage?.niveau} / ${selectedJeu.section?.niveau || "N/A"}`
+                  : "Sélectionnez un jeu pour gérer ses questions"}
               </CardDescription>
             </div>
             <CardContent className="p-6 space-y-4">
@@ -1528,11 +1659,12 @@ const AdminDashboard = () => {
                   <Target className="h-4 w-4 text-purple-600" />
                   <span className="text-sm font-medium text-gray-700">
                     Total: {questions.length} questions
-                    {selectedJeu && ` pour ${selectedJeu.stage?.niveau} / ${selectedJeu.section?.niveau || 'N/A'}`}
+                    {selectedJeu &&
+                      ` pour ${selectedJeu.stage?.niveau} / ${selectedJeu.section?.niveau || "N/A"}`}
                   </span>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
                   onClick={handleAddQuestion}
                   disabled={!selectedJeu}
@@ -1554,11 +1686,16 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   questions.map((question, index) => (
-                    <div key={question.id} className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-purple-300">
+                    <div
+                      key={question.id}
+                      className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 hover:border-purple-300"
+                    >
                       <div className="flex items-center space-x-4">
                         <div className="relative">
                           <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center ring-2 ring-purple-100">
-                            <span className="text-purple-600 font-bold text-lg">{index + 1}</span>
+                            <span className="text-purple-600 font-bold text-lg">
+                              {index + 1}
+                            </span>
                           </div>
                         </div>
                         <div className="flex-1">
@@ -1566,7 +1703,10 @@ const AdminDashboard = () => {
                             {question.intitule}
                           </p>
                           <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 border-purple-200">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-purple-100 text-purple-800 border-purple-200"
+                            >
                               {question.langue}
                             </Badge>
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -1590,9 +1730,9 @@ const AdminDashboard = () => {
                         >
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
                           onClick={() => handleDeleteQuestion(question.id)}
                         >
@@ -1622,24 +1762,40 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="title"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Titre
                   </Label>
                   <Input
                     id="title"
                     value={editFormData.title}
-                    onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        title: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau
                   </Label>
                   <Input
                     id="niveau"
                     value={editFormData.niveau}
-                    onChange={(e) => setEditFormData({...editFormData, niveau: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        niveau: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
@@ -1653,9 +1809,14 @@ const AdminDashboard = () => {
                         <Textarea
                           value={text}
                           onChange={(e) => {
-                            const newDescriptions = [...editFormData.descriptions];
+                            const newDescriptions = [
+                              ...editFormData.descriptions,
+                            ];
                             newDescriptions[index] = e.target.value;
-                            setEditFormData({...editFormData, descriptions: newDescriptions});
+                            setEditFormData({
+                              ...editFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                           className="border-2 focus:border-amber-500 focus:ring-amber-500 min-h-[80px]"
                           placeholder={`Paragraphe ${index + 1}`}
@@ -1665,8 +1826,14 @@ const AdminDashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const newDescriptions = editFormData.descriptions.filter((_, i) => i !== index);
-                            setEditFormData({...editFormData, descriptions: newDescriptions});
+                            const newDescriptions =
+                              editFormData.descriptions.filter(
+                                (_, i) => i !== index,
+                              );
+                            setEditFormData({
+                              ...editFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                         >
                           <X className="h-4 w-4" />
@@ -1676,7 +1843,12 @@ const AdminDashboard = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setEditFormData({...editFormData, descriptions: [...editFormData.descriptions, '']})}
+                      onClick={() =>
+                        setEditFormData({
+                          ...editFormData,
+                          descriptions: [...editFormData.descriptions, ""],
+                        })
+                      }
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Ajouter un paragraphe
@@ -1684,12 +1856,17 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={editFormData.langue}
-                    onValueChange={(value) => setEditFormData({...editFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setEditFormData({ ...editFormData, langue: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-amber-500 focus:ring-amber-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -1704,14 +1881,22 @@ const AdminDashboard = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="image"
                       value={editFormData.image}
-                      onChange={(e) => setEditFormData({...editFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-amber-500 focus:ring-amber-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -1723,7 +1908,7 @@ const AdminDashboard = () => {
                           const file = e.target.files?.[0];
                           if (file) {
                             handleImageUpload(file);
-                            setEditFormData({...editFormData, image: ''});
+                            setEditFormData({ ...editFormData, image: "" });
                           }
                         }}
                         className="hidden"
@@ -1733,7 +1918,9 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('edit-image-upload')?.click()}
+                        onClick={() =>
+                          document.getElementById("edit-image-upload")?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-amber-300"
                       >
@@ -1742,19 +1929,21 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                       {editFormData.image && (
                         <div className="flex items-center space-x-2">
                           <ImageIcon className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                          <span className="text-xs text-green-600">
+                            Image sélectionnée
+                          </span>
                         </div>
                       )}
                     </div>
                     {editFormData.image && (
                       <div className="mt-2">
                         <Image
-                          src={editFormData.image}
+                          src={getImageUrl(editFormData.image)}
                           alt="Preview"
                           width={100}
                           height={100}
@@ -1765,30 +1954,38 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="numOrder"
                     type="number"
                     value={editFormData.numOrder}
-                    onChange={(e) => setEditFormData({...editFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveStage}
                 className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-md"
               >
@@ -1814,25 +2011,35 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-title" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="add-title"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Titre
                   </Label>
                   <Input
                     id="add-title"
                     value={addFormData.title}
-                    onChange={(e) => setAddFormData({...addFormData, title: e.target.value})}
+                    onChange={(e) =>
+                      setAddFormData({ ...addFormData, title: e.target.value })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                     placeholder="Nom du stage"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="add-niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau
                   </Label>
                   <Input
                     id="add-niveau"
                     value={addFormData.niveau}
-                    onChange={(e) => setAddFormData({...addFormData, niveau: e.target.value})}
+                    onChange={(e) =>
+                      setAddFormData({ ...addFormData, niveau: e.target.value })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                     placeholder="Niveau du stage"
                   />
@@ -1847,9 +2054,14 @@ const AdminDashboard = () => {
                         <Textarea
                           value={text}
                           onChange={(e) => {
-                            const newDescriptions = [...addFormData.descriptions];
+                            const newDescriptions = [
+                              ...addFormData.descriptions,
+                            ];
                             newDescriptions[index] = e.target.value;
-                            setAddFormData({...addFormData, descriptions: newDescriptions});
+                            setAddFormData({
+                              ...addFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                           className="border-2 focus:border-amber-500 focus:ring-amber-500 min-h-[80px]"
                           placeholder={`Paragraphe ${index + 1}`}
@@ -1859,8 +2071,14 @@ const AdminDashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const newDescriptions = addFormData.descriptions.filter((_, i) => i !== index);
-                            setAddFormData({...addFormData, descriptions: newDescriptions});
+                            const newDescriptions =
+                              addFormData.descriptions.filter(
+                                (_, i) => i !== index,
+                              );
+                            setAddFormData({
+                              ...addFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                         >
                           <X className="h-4 w-4" />
@@ -1870,7 +2088,12 @@ const AdminDashboard = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setAddFormData({...addFormData, descriptions: [...addFormData.descriptions, '']})}
+                      onClick={() =>
+                        setAddFormData({
+                          ...addFormData,
+                          descriptions: [...addFormData.descriptions, ""],
+                        })
+                      }
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Ajouter un paragraphe
@@ -1878,12 +2101,17 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="add-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={addFormData.langue}
-                    onValueChange={(value) => setAddFormData({...addFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setAddFormData({ ...addFormData, langue: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-amber-500 focus:ring-amber-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -1898,14 +2126,22 @@ const AdminDashboard = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="add-image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="add-image"
                       value={addFormData.image}
-                      onChange={(e) => setAddFormData({...addFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setAddFormData({
+                          ...addFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-amber-500 focus:ring-amber-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -1921,7 +2157,9 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('image-upload')?.click()}
+                        onClick={() =>
+                          document.getElementById("image-upload")?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-amber-300"
                       >
@@ -1930,19 +2168,21 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                       {addFormData.image && (
                         <div className="flex items-center space-x-2">
                           <ImageIcon className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                          <span className="text-xs text-green-600">
+                            Image sélectionnée
+                          </span>
                         </div>
                       )}
                     </div>
                     {addFormData.image && (
                       <div className="mt-2">
                         <Image
-                          src={addFormData.image}
+                          src={getImageUrl(addFormData.image)}
                           alt="Preview"
                           width={100}
                           height={100}
@@ -1953,30 +2193,38 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="add-numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="add-numOrder"
                     type="number"
                     value={addFormData.numOrder}
-                    onChange={(e) => setAddFormData({...addFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setAddFormData({
+                        ...addFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveNewStage}
                 className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-md"
               >
@@ -1988,7 +2236,10 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Add Section Dialog */}
-        <Dialog open={isAddSectionDialogOpen} onOpenChange={setIsAddSectionDialogOpen}>
+        <Dialog
+          open={isAddSectionDialogOpen}
+          onOpenChange={setIsAddSectionDialogOpen}
+        >
           <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center text-xl">
@@ -2002,36 +2253,60 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="section-title" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="section-title"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Titre
                   </Label>
                   <Input
                     id="section-title"
                     value={addSectionFormData.title}
-                    onChange={(e) => setAddSectionFormData({...addSectionFormData, title: e.target.value})}
+                    onChange={(e) =>
+                      setAddSectionFormData({
+                        ...addSectionFormData,
+                        title: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                     placeholder="Nom de la section"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section-niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="section-niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau
                   </Label>
                   <Input
                     id="section-niveau"
                     value={addSectionFormData.niveau}
-                    onChange={(e) => setAddSectionFormData({...addSectionFormData, niveau: e.target.value})}
+                    onChange={(e) =>
+                      setAddSectionFormData({
+                        ...addSectionFormData,
+                        niveau: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                     placeholder="Niveau de la section"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="section-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={addSectionFormData.langue}
-                    onValueChange={(value) => setAddSectionFormData({...addSectionFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setAddSectionFormData({
+                        ...addSectionFormData,
+                        langue: value,
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-emerald-500 focus:ring-emerald-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2046,14 +2321,22 @@ const AdminDashboard = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section-image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="section-image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="section-image"
                       value={addSectionFormData.image}
-                      onChange={(e) => setAddSectionFormData({...addSectionFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setAddSectionFormData({
+                          ...addSectionFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -2064,7 +2347,7 @@ const AdminDashboard = () => {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleImageUpload(file, 'section');
+                            handleImageUpload(file, "section");
                           }
                         }}
                         className="hidden"
@@ -2074,7 +2357,11 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('section-image-upload')?.click()}
+                        onClick={() =>
+                          document
+                            .getElementById("section-image-upload")
+                            ?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-emerald-300"
                       >
@@ -2083,19 +2370,21 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                       {addSectionFormData.image && (
                         <div className="flex items-center space-x-2">
                           <ImageIcon className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                          <span className="text-xs text-green-600">
+                            Image sélectionnée
+                          </span>
                         </div>
                       )}
                     </div>
                     {addSectionFormData.image && (
                       <div className="mt-2">
                         <Image
-                          src={addSectionFormData.image}
+                          src={getImageUrl(addSectionFormData.image)}
                           alt="Preview"
                           width={100}
                           height={100}
@@ -2106,30 +2395,38 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section-numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="section-numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="section-numOrder"
                     type="number"
                     value={addSectionFormData.numOrder}
-                    onChange={(e) => setAddSectionFormData({...addSectionFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setAddSectionFormData({
+                        ...addSectionFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsAddSectionDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveNewSection}
                 className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md"
               >
@@ -2141,7 +2438,10 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Edit Section Dialog */}
-        <Dialog open={isEditSectionDialogOpen} onOpenChange={setIsEditSectionDialogOpen}>
+        <Dialog
+          open={isEditSectionDialogOpen}
+          onOpenChange={setIsEditSectionDialogOpen}
+        >
           <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center text-xl">
@@ -2155,24 +2455,40 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-section-title" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-section-title"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Titre
                   </Label>
                   <Input
                     id="edit-section-title"
                     value={editSectionFormData.title}
-                    onChange={(e) => setEditSectionFormData({...editSectionFormData, title: e.target.value})}
+                    onChange={(e) =>
+                      setEditSectionFormData({
+                        ...editSectionFormData,
+                        title: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-section-niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-section-niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau
                   </Label>
                   <Input
                     id="edit-section-niveau"
                     value={editSectionFormData.niveau}
-                    onChange={(e) => setEditSectionFormData({...editSectionFormData, niveau: e.target.value})}
+                    onChange={(e) =>
+                      setEditSectionFormData({
+                        ...editSectionFormData,
+                        niveau: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
@@ -2186,9 +2502,14 @@ const AdminDashboard = () => {
                         <Textarea
                           value={text}
                           onChange={(e) => {
-                            const newDescriptions = [...editSectionFormData.descriptions];
+                            const newDescriptions = [
+                              ...editSectionFormData.descriptions,
+                            ];
                             newDescriptions[index] = e.target.value;
-                            setEditSectionFormData({...editSectionFormData, descriptions: newDescriptions});
+                            setEditSectionFormData({
+                              ...editSectionFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                           className="border-2 focus:border-emerald-500 focus:ring-emerald-500 min-h-[80px]"
                           placeholder={`Paragraphe ${index + 1}`}
@@ -2198,8 +2519,14 @@ const AdminDashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const newDescriptions = editSectionFormData.descriptions.filter((_, i) => i !== index);
-                            setEditSectionFormData({...editSectionFormData, descriptions: newDescriptions});
+                            const newDescriptions =
+                              editSectionFormData.descriptions.filter(
+                                (_, i) => i !== index,
+                              );
+                            setEditSectionFormData({
+                              ...editSectionFormData,
+                              descriptions: newDescriptions,
+                            });
                           }}
                         >
                           <X className="h-4 w-4" />
@@ -2209,7 +2536,15 @@ const AdminDashboard = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setEditSectionFormData({...editSectionFormData, descriptions: [...editSectionFormData.descriptions, '']})}
+                      onClick={() =>
+                        setEditSectionFormData({
+                          ...editSectionFormData,
+                          descriptions: [
+                            ...editSectionFormData.descriptions,
+                            "",
+                          ],
+                        })
+                      }
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Ajouter un paragraphe
@@ -2217,12 +2552,20 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-section-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-section-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={editSectionFormData.langue}
-                    onValueChange={(value) => setEditSectionFormData({...editSectionFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setEditSectionFormData({
+                        ...editSectionFormData,
+                        langue: value,
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-emerald-500 focus:ring-emerald-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2237,14 +2580,22 @@ const AdminDashboard = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-section-image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-section-image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="edit-section-image"
                       value={editSectionFormData.image}
-                      onChange={(e) => setEditSectionFormData({...editSectionFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setEditSectionFormData({
+                          ...editSectionFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -2255,8 +2606,11 @@ const AdminDashboard = () => {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleImageUpload(file, 'section');
-                            setEditSectionFormData({...editSectionFormData, image: ''});
+                            handleImageUpload(file, "section");
+                            setEditSectionFormData({
+                              ...editSectionFormData,
+                              image: "",
+                            });
                           }
                         }}
                         className="hidden"
@@ -2266,7 +2620,11 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('edit-section-image-upload')?.click()}
+                        onClick={() =>
+                          document
+                            .getElementById("edit-section-image-upload")
+                            ?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-emerald-300"
                       >
@@ -2275,19 +2633,21 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                       {editSectionFormData.image && (
                         <div className="flex items-center space-x-2">
                           <ImageIcon className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                          <span className="text-xs text-green-600">
+                            Image sélectionnée
+                          </span>
                         </div>
                       )}
                     </div>
                     {editSectionFormData.image && (
                       <div className="mt-2">
                         <Image
-                          src={editSectionFormData.image}
+                          src={getImageUrl(editSectionFormData.image)}
                           alt="Preview"
                           width={100}
                           height={100}
@@ -2298,30 +2658,38 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-section-numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-section-numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="edit-section-numOrder"
                     type="number"
                     value={editSectionFormData.numOrder}
-                    onChange={(e) => setEditSectionFormData({...editSectionFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setEditSectionFormData({
+                        ...editSectionFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsEditSectionDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveSection}
                 className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md"
               >
@@ -2347,12 +2715,17 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-stage" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-stage"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Stage *
                   </Label>
                   <Select
                     value={addJeuFormData.stageId}
-                    onValueChange={(value) => setAddJeuFormData({...addJeuFormData, stageId: value})}
+                    onValueChange={(value) =>
+                      setAddJeuFormData({ ...addJeuFormData, stageId: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner un stage" />
@@ -2366,14 +2739,22 @@ const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-section" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-section"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Section
                   </Label>
                   <Select
                     value={addJeuFormData.sectionId || undefined}
-                    onValueChange={(value) => setAddJeuFormData({...addJeuFormData, sectionId: value || ''})}
+                    onValueChange={(value) =>
+                      setAddJeuFormData({
+                        ...addJeuFormData,
+                        sectionId: value || "",
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner une section (optionnel)" />
@@ -2389,7 +2770,10 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau *
                   </Label>
                   <Input
@@ -2402,12 +2786,17 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={addJeuFormData.langue}
-                    onValueChange={(value) => setAddJeuFormData({...addJeuFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setAddJeuFormData({ ...addJeuFormData, langue: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2423,14 +2812,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="jeu-image"
                       value={addJeuFormData.image}
-                      onChange={(e) => setAddJeuFormData({...addJeuFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setAddJeuFormData({
+                          ...addJeuFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -2451,7 +2848,9 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('jeu-image-upload')?.click()}
+                        onClick={() =>
+                          document.getElementById("jeu-image-upload")?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-blue-300"
                       >
@@ -2460,37 +2859,45 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="jeu-numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="jeu-numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="jeu-numOrder"
                     type="number"
                     value={addJeuFormData.numOrder}
-                    onChange={(e) => setAddJeuFormData({...addJeuFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setAddJeuFormData({
+                        ...addJeuFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsAddJeuDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveNewJeu}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md"
               >
@@ -2502,7 +2909,10 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Edit Jeu Dialog */}
-        <Dialog open={isEditJeuDialogOpen} onOpenChange={setIsEditJeuDialogOpen}>
+        <Dialog
+          open={isEditJeuDialogOpen}
+          onOpenChange={setIsEditJeuDialogOpen}
+        >
           <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center text-xl">
@@ -2516,12 +2926,17 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-stage" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-stage"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Stage *
                   </Label>
                   <Select
                     value={editJeuFormData.stageId}
-                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, stageId: value})}
+                    onValueChange={(value) =>
+                      setEditJeuFormData({ ...editJeuFormData, stageId: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner un stage" />
@@ -2535,14 +2950,22 @@ const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-section" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-section"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Section
                   </Label>
                   <Select
                     value={editJeuFormData.sectionId || undefined}
-                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, sectionId: value || ''})}
+                    onValueChange={(value) =>
+                      setEditJeuFormData({
+                        ...editJeuFormData,
+                        sectionId: value || "",
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner une section (optionnel)" />
@@ -2558,7 +2981,10 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-niveau" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-niveau"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Niveau *
                   </Label>
                   <Input
@@ -2571,12 +2997,17 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={editJeuFormData.langue}
-                    onValueChange={(value) => setEditJeuFormData({...editJeuFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setEditJeuFormData({ ...editJeuFormData, langue: value })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2592,14 +3023,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-image" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-image"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Image
                   </Label>
                   <div className="space-y-2">
                     <Input
                       id="edit-jeu-image"
                       value={editJeuFormData.image}
-                      onChange={(e) => setEditJeuFormData({...editJeuFormData, image: e.target.value})}
+                      onChange={(e) =>
+                        setEditJeuFormData({
+                          ...editJeuFormData,
+                          image: e.target.value,
+                        })
+                      }
                       className="border-2 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="URL de l'image ou téléchargez un fichier"
                     />
@@ -2620,7 +3059,11 @@ const AdminDashboard = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => document.getElementById('edit-jeu-image-upload')?.click()}
+                        onClick={() =>
+                          document
+                            .getElementById("edit-jeu-image-upload")
+                            ?.click()
+                        }
                         disabled={isUploading}
                         className="border-2 hover:border-blue-300"
                       >
@@ -2629,12 +3072,14 @@ const AdminDashboard = () => {
                         ) : (
                           <Upload className="h-4 w-4 mr-1" />
                         )}
-                        {isUploading ? 'Upload...' : 'Télécharger'}
+                        {isUploading ? "Upload..." : "Télécharger"}
                       </Button>
                       {editJeuFormData.image && (
                         <div className="flex items-center space-x-2">
                           <ImageIcon className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-600">Image sélectionnée</span>
+                          <span className="text-xs text-green-600">
+                            Image sélectionnée
+                          </span>
                         </div>
                       )}
                     </div>
@@ -2653,30 +3098,38 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-jeu-numOrder" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-jeu-numOrder"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="edit-jeu-numOrder"
                     type="number"
                     value={editJeuFormData.numOrder}
-                    onChange={(e) => setEditJeuFormData({...editJeuFormData, numOrder: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setEditJeuFormData({
+                        ...editJeuFormData,
+                        numOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsEditJeuDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveJeu}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md"
               >
@@ -2688,7 +3141,10 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Add Question Dialog */}
-        <Dialog open={isAddQuestionDialogOpen} onOpenChange={setIsAddQuestionDialogOpen}>
+        <Dialog
+          open={isAddQuestionDialogOpen}
+          onOpenChange={setIsAddQuestionDialogOpen}
+        >
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center text-xl">
@@ -2702,25 +3158,41 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="question-intitule" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="question-intitule"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Question *
                   </Label>
                   <Textarea
                     id="question-intitule"
                     value={addQuestionFormData.intitule}
-                    onChange={(e) => setAddQuestionFormData({...addQuestionFormData, intitule: e.target.value})}
+                    onChange={(e) =>
+                      setAddQuestionFormData({
+                        ...addQuestionFormData,
+                        intitule: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-purple-500 focus:ring-purple-500 min-h-[100px]"
                     placeholder="Entrez votre question ici..."
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="question-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="question-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={addQuestionFormData.langue}
-                    onValueChange={(value) => setAddQuestionFormData({...addQuestionFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setAddQuestionFormData({
+                        ...addQuestionFormData,
+                        langue: value,
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-purple-500 focus:ring-purple-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2736,14 +3208,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="question-orderNum" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="question-orderNum"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="question-orderNum"
                     type="number"
                     value={addQuestionFormData.orderNum}
-                    onChange={(e) => setAddQuestionFormData({...addQuestionFormData, orderNum: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setAddQuestionFormData({
+                        ...addQuestionFormData,
+                        orderNum: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
@@ -2754,14 +3234,22 @@ const AdminDashboard = () => {
                   </Label>
                   <div className="space-y-3">
                     {addQuestionFormData.reponses.map((reponse, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg"
+                      >
                         <div className="flex-1">
                           <Input
                             value={reponse.intitule}
                             onChange={(e) => {
-                              const newReponses = [...addQuestionFormData.reponses];
+                              const newReponses = [
+                                ...addQuestionFormData.reponses,
+                              ];
                               newReponses[index].intitule = e.target.value;
-                              setAddQuestionFormData({...addQuestionFormData, reponses: newReponses});
+                              setAddQuestionFormData({
+                                ...addQuestionFormData,
+                                reponses: newReponses,
+                              });
                             }}
                             placeholder={`Réponse ${index + 1}`}
                             className="border-2 focus:border-purple-500 focus:ring-purple-500"
@@ -2772,21 +3260,34 @@ const AdminDashboard = () => {
                             type="checkbox"
                             checked={reponse.isCorrect}
                             onChange={(e) => {
-                              const newReponses = [...addQuestionFormData.reponses];
+                              const newReponses = [
+                                ...addQuestionFormData.reponses,
+                              ];
                               newReponses[index].isCorrect = e.target.checked;
-                              setAddQuestionFormData({...addQuestionFormData, reponses: newReponses});
+                              setAddQuestionFormData({
+                                ...addQuestionFormData,
+                                reponses: newReponses,
+                              });
                             }}
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                           />
-                          <span className="text-sm text-gray-600">Correcte</span>
+                          <span className="text-sm text-gray-600">
+                            Correcte
+                          </span>
                         </div>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const newReponses = addQuestionFormData.reponses.filter((_, i) => i !== index);
-                            setAddQuestionFormData({...addQuestionFormData, reponses: newReponses});
+                            const newReponses =
+                              addQuestionFormData.reponses.filter(
+                                (_, i) => i !== index,
+                              );
+                            setAddQuestionFormData({
+                              ...addQuestionFormData,
+                              reponses: newReponses,
+                            });
                           }}
                           disabled={addQuestionFormData.reponses.length <= 2}
                         >
@@ -2797,10 +3298,19 @@ const AdminDashboard = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setAddQuestionFormData({
-                        ...addQuestionFormData, 
-                        reponses: [...addQuestionFormData.reponses, { intitule: '', isCorrect: false, langue: addQuestionFormData.langue }]
-                      })}
+                      onClick={() =>
+                        setAddQuestionFormData({
+                          ...addQuestionFormData,
+                          reponses: [
+                            ...addQuestionFormData.reponses,
+                            {
+                              intitule: "",
+                              isCorrect: false,
+                              langue: addQuestionFormData.langue,
+                            },
+                          ],
+                        })
+                      }
                       className="w-full"
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -2811,16 +3321,16 @@ const AdminDashboard = () => {
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsAddQuestionDialogOpen(false)}
                 className="border-2"
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveNewQuestion}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
               >
@@ -2832,7 +3342,10 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Edit Question Dialog */}
-        <Dialog open={isEditQuestionDialogOpen} onOpenChange={setIsEditQuestionDialogOpen}>
+        <Dialog
+          open={isEditQuestionDialogOpen}
+          onOpenChange={setIsEditQuestionDialogOpen}
+        >
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center text-xl">
@@ -2846,25 +3359,41 @@ const AdminDashboard = () => {
             <div className="flex-1 overflow-y-auto px-1">
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-question-intitule" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-question-intitule"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Question *
                   </Label>
                   <Textarea
                     id="edit-question-intitule"
                     value={editQuestionFormData.intitule}
-                    onChange={(e) => setEditQuestionFormData({...editQuestionFormData, intitule: e.target.value})}
+                    onChange={(e) =>
+                      setEditQuestionFormData({
+                        ...editQuestionFormData,
+                        intitule: e.target.value,
+                      })
+                    }
                     className="border-2 focus:border-purple-500 focus:ring-purple-500 min-h-[100px]"
                     placeholder="Entrez votre question ici..."
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="edit-question-langue" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-question-langue"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Langue
                   </Label>
                   <Select
                     value={editQuestionFormData.langue}
-                    onValueChange={(value) => setEditQuestionFormData({...editQuestionFormData, langue: value})}
+                    onValueChange={(value) =>
+                      setEditQuestionFormData({
+                        ...editQuestionFormData,
+                        langue: value,
+                      })
+                    }
                   >
                     <SelectTrigger className="border-2 focus:border-purple-500 focus:ring-purple-500">
                       <SelectValue placeholder="Sélectionner une langue" />
@@ -2880,14 +3409,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-question-orderNum" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="edit-question-orderNum"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Ordre
                   </Label>
                   <Input
                     id="edit-question-orderNum"
                     type="number"
                     value={editQuestionFormData.orderNum}
-                    onChange={(e) => setEditQuestionFormData({...editQuestionFormData, orderNum: parseInt(e.target.value) || 0})}
+                    onChange={(e) =>
+                      setEditQuestionFormData({
+                        ...editQuestionFormData,
+                        orderNum: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="border-2 focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
@@ -2898,7 +3435,10 @@ const AdminDashboard = () => {
                   </Label>
                   <div className="space-y-3">
                     {editQuestionFormData.reponses.map((reponse, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg bg-gray-50"
+                      >
                         <div className="flex-1">
                           <Input
                             value={reponse.intitule}
@@ -2914,21 +3454,25 @@ const AdminDashboard = () => {
                             disabled
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded"
                           />
-                          <span className="text-sm text-gray-600">Correcte</span>
+                          <span className="text-sm text-gray-600">
+                            Correcte
+                          </span>
                         </div>
                       </div>
                     ))}
                     {editQuestionFormData.reponses.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">Aucune réponse disponible</p>
+                      <p className="text-sm text-gray-500 italic">
+                        Aucune réponse disponible
+                      </p>
                     )}
                   </div>
                 </div>
               </div>
             </div>
             <DialogFooter className="flex-shrink-0 space-x-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => {
                   setIsEditQuestionDialogOpen(false);
                   setEditingQuestion(null);
@@ -2937,8 +3481,8 @@ const AdminDashboard = () => {
               >
                 Annuler
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleSaveQuestion}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
               >

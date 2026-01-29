@@ -146,9 +146,9 @@ const HeaderJeu = () => {
             {/* User Stats Toggle */}
             <button
               onClick={() => setShowStats(!showStats)}
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 shadow-md"
+              className=" items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 shadow-md hidden md:block"
             >
-              <Trophy className="w-4 h-4" />
+              <Trophy className="w-4 h-4 " />
               <span className="text-sm font-medium">{totalScore}</span>
             </button>
 

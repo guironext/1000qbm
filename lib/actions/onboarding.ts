@@ -96,7 +96,7 @@ export async function initializePalmaresForUser(userId: string, userLangue: stri
           sectionNumOrder: section1.numOrder,
           jeuId: jeu.id,
           statusJeu: "CURRENT",
-          niveau: `${stage1.title}-${section1.title}`,
+          niveauJeu: `${stage1.title}-${section1.title}`,
           langue: (userLangue as Langue) || Langue.FR,
           numOrder: 1,
           jeuValide: false,

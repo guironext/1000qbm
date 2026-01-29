@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
           }
         });
         if (stage) {
-          const descriptionsText = stage.descriptions.map((d) => d.texte).join(' ');
+          const descriptionsText = stage.descriptions.map((d) => d.texte);
           return NextResponse.json({
             ...stage,
             descriptions: descriptionsText,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         console.log('Stages found:', stages);
         const formattedStages = stages.map((stage) => ({
           ...stage,
-          descriptions: stage.descriptions.map((d) => d.texte).join(' '),
+          descriptions: stage.descriptions.map((d) => d.texte),
           stageNumOrder: stage.numOrder
         }));
         console.log('Formatted stages:', formattedStages);
