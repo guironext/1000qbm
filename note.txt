@@ -153,7 +153,7 @@ SIGNING_SECRET=whsec_Xh842mnHMiB7OUXdgDdBnYuAj2EP4isz
 
 ============================================================New good================
                                                                                                                                                                                                                                                                                                                                                                                                 ============================GO OO OD Joueur LATEST +++++++++++++++++++++++++++++++++++++++++++++++++++
-the the page joueur.tsx at line 50, when we click the button "Commencer à jouer", 
+the the page joueur.tsx at line 180, when we click the button "Commencer à jouer", 
 we want to check if current user has a palmares ? 
 if no,  create a palmares for the current user with 
 palmares.user===current user,
@@ -163,9 +163,16 @@ palmares.score===0,
 palmares.jeuNiveauValide,
 palmares.jeuValide,
 
+then create jeuEnCours for the current user with 
+jeuEnCours.stage===Stage 1
+jeuEnCours.section===Section 1
+
 then redirect to page /fr/joueur/emboard.tsx
 
-if yes, redirect toto page /fr/joueur/emboard.tsx
+if user has a palmares, 
+get the current user's jeuEnCours, jeuEnCours.stage and jeuEnCours.section
+then get stage with stage.niveau===jeuEnCours.stage and section.niveau===jeuEnCours then
+redirect toto page /fr/joueur/emboard.tsx
 
 
 +++++++++++++++++++++++++++++nEXT page EMBOARD GOOD ++++++++++++++++++++++++++>>>>
@@ -227,3 +234,37 @@ select stage where stage.numOrder===palmares.compteurJeu and display selected st
 
 when we click the button "Commençons" in the bottom it redirects to page /fr/joueur/emboad/jeuSection.tsx
 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+at line 224 we wanna activate the button "Niveau Suivant"  if the score i>80% then user has win and can click this button.
+when we click this button, then check if the nombre of sections related to the selected stage in the palmares of this current user is equal to the number of sections in the selecte stage where palmares.stage===jeuEnCours.stage. 
+if no,  then select section from prisma data base where section.numOrder===palmares.compteurJeu +1. 
+
+then update palmares with 
+palmares.jeuNiveauValide===jeuEnCours.stage & jeuEnCours.section
+pamares.score === score
+palmares.jeuValide===true
+
+then update jeuEnCours for the current user with 
+jeuEnCours.stage===seleted stage.niveau,
+jeuEnCours.section===selected section.niveau,
+
+then create new palmares with 
+palmares.user===current user,
+palmares.compteurJeu===latest palmares.compteurJeu+1,
+palmares.stageLength,
+palmares.score===0,
+palmares.jeuNiveauValide,
+palmares.jeuValide,
+
+then Redirect to page /fr/joueur/emboard/jeuSection.tsx
+
+if yes,  then select section from prisma data base where stage.numOrder===previous stage.numOrder +1. 
+and create palmares with 
+palmares.user===current user,
+Palmares.compteurJeu,
+Palmares.stageLength,
+palmares.score===0,
+Palmares.jeuNiveauValide,
+palmares.jeuValide,
+
+then rediirect to page /fr/joueur/emboard.tsx

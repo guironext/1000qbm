@@ -122,7 +122,15 @@ const HeaderJeu = () => {
 
       {/* Right Side (User Info & Stats) */}
       <div className="flex items-center gap-3 z-10">
-        <button className="group relative inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-medium text-xs shadow-lg hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+        <button
+          onClick={() =>
+            window.open(
+              "https://vente.paiementpro.net/dons-1000-qbm/5234",
+              "_blank",
+            )
+          }
+          className="group relative inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-medium text-xs shadow-lg hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        >
           <svg
             className="w-3 h-3"
             fill="none"
@@ -143,13 +151,6 @@ const HeaderJeu = () => {
         <SignedIn>
           <div className="flex items-center gap-4">
             {/* User Stats Toggle */}
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className=" items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 shadow-md hidden md:block"
-            >
-              <Trophy className="w-4 h-4 " />
-              <span className="text-sm font-medium">{totalScore}</span>
-            </button>
 
             {/* User Info */}
             <div className="text-right">

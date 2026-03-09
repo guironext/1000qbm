@@ -25,6 +25,7 @@ model Stage {
   numOrder       Int
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+  section Section[]
   descriptions   Paragraphe[]
   jeux           Jeu[]
 }
@@ -48,7 +49,8 @@ model Section {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   jeux           Jeu[]
- 
+  stageId String?
+  stage   Stage? @relation(fields: [stageId], references: [id])
 }
 
 model Jeu {
@@ -61,7 +63,7 @@ model Jeu {
   valide    Boolean @default(false)
   stageId   String
   stage     Stage?  @relation(fields: [stageId], references: [id])
-
+  jeuEnCours JeuEnCours[]
   sectionId String?
   section   Section? @relation(fields: [sectionId], references: [id])
 
@@ -76,7 +78,7 @@ model Question {
   status   Status    @default(NEW)
   valide   Boolean   @default(false)
   reponses Reponse[]
-
+  
   jeuId String?
   jeu   Jeu?    @relation(fields: [jeuId], references: [id])
 }
@@ -103,6 +105,7 @@ model User {
   updatedAt      DateTime          @updatedAt
   role           UserRole          @default(JOUEUR)
   palmares       Palmares[]
+  jeuEnCours     JeuEnCours[]
 
 
 }
@@ -127,6 +130,17 @@ model Palmares {
   createdAt        DateTime          @default(now())
 }
 
+model JeuEnCours{
+  id String @id @default(uuid())
+  stage String
+  section String
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  jeuId String?
+  jeu   Jeu?   @relation(fields: [jeuId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 enum Langue {
   FR

@@ -517,10 +517,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleImageUpload = async (
-    file: File,
-    formType: "stage" | "section" = "stage",
-  ) => {
+  const handleImageUpload = async (file: File): Promise<string | null> => {
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -533,12 +530,8 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const result = await response.json();
-        if (formType === "stage") {
-          setAddFormData({ ...addFormData, image: result.url });
-        } else {
-          setAddSectionFormData({ ...addSectionFormData, image: result.url });
-        }
         toast.success("Image téléchargée avec succès!");
+        return result.url;
       } else {
         try {
           const errorData = await response.json();
@@ -551,19 +544,24 @@ const AdminDashboard = () => {
           console.error("Error response:", errorText);
           toast.error("Erreur lors du téléchargement de l'image");
         }
+        return null;
       }
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Erreur lors du téléchargement de l'image");
+      return null;
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleImageUpload(file);
+      const imageUrl = await handleImageUpload(file);
+      if (imageUrl) {
+        setAddFormData({ ...addFormData, image: imageUrl });
+      }
     }
   };
 
@@ -1904,11 +1902,16 @@ const AdminDashboard = () => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleImageUpload(file);
-                            setEditFormData({ ...editFormData, image: "" });
+                            const imageUrl = await handleImageUpload(file);
+                            if (imageUrl) {
+                              setEditFormData({
+                                ...editFormData,
+                                image: imageUrl,
+                              });
+                            }
                           }
                         }}
                         className="hidden"
@@ -2344,10 +2347,16 @@ const AdminDashboard = () => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleImageUpload(file, "section");
+                            const imageUrl = await handleImageUpload(file);
+                            if (imageUrl) {
+                              setAddSectionFormData({
+                                ...addSectionFormData,
+                                image: imageUrl,
+                              });
+                            }
                           }
                         }}
                         className="hidden"
@@ -2603,14 +2612,16 @@ const AdminDashboard = () => {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleImageUpload(file, "section");
-                            setEditSectionFormData({
-                              ...editSectionFormData,
-                              image: "",
-                            });
+                            const imageUrl = await handleImageUpload(file);
+                            if (imageUrl) {
+                              setEditSectionFormData({
+                                ...editSectionFormData,
+                                image: imageUrl,
+                              });
+                            }
                           }
                         }}
                         className="hidden"

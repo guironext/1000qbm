@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, ArrowRight, Trophy } from "lucide-react";
 import Image from "next/image";
-import { handleVictory } from "@/lib/actions/boardActions";
 
 // Define simplified types for props to avoid heavy Prisma type dependencies client-side
 interface Reponse {
@@ -25,12 +24,14 @@ interface QuestionFlowProps {
   questions: Question[];
   jeuTitle?: string;
   niveau?: string;
+  onNiveauSuivant?: (score: number) => Promise<void>;
 }
 
 export default function QuestionFlow({
   questions,
   jeuTitle,
   niveau,
+  onNiveauSuivant,
 }: QuestionFlowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedReponseId, setSelectedReponseId] = useState<string | null>(
@@ -38,6 +39,7 @@ export default function QuestionFlow({
   );
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentQuestion = questions[currentIndex];
   const isFinished = currentIndex >= questions.length;
@@ -74,7 +76,7 @@ export default function QuestionFlow({
 
   if (isFinished) {
     const scorePercentage = (score / questions.length) * 100;
-    const isDefeat = scorePercentage < 80;
+    const isDefeat = scorePercentage < 80;    
 
     return (
       <Card className="overflow-hidden border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm transform transition-all duration-500 animate-in fade-in zoom-in-95">
@@ -221,13 +223,19 @@ export default function QuestionFlow({
 
               <Button
                 className="mt-8 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 px-12 rounded-full shadow-xl transform transition-transform hover:scale-105"
-                onClick={() => {
-                  const jeuNiveauString =
-                    `${niveau || ""} ${jeuTitle || ""}`.trim();
-                  handleVictory(score, jeuNiveauString);
+                disabled={isSubmitting}
+                onClick={async () => {
+                  if (!onNiveauSuivant) return;
+                  setIsSubmitting(true);
+                  try {
+                    await onNiveauSuivant(score);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
                 }}
               >
-                Niveau Suivant <ArrowRight className="w-5 h-5 ml-2" />
+                {isSubmitting ? "Chargement…" : "Niveau Suivant"}{" "}
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </>
           )}
