@@ -99,9 +99,11 @@ export async function initializePalmaresForUser(userId: string) {
       const palmares = await prisma.palmares.create({
         data: {
           userId,
-          compteurJeu: 1,
-          stageLength: 1,
           score: 0,
+          stage: stage1.niveau,
+          section: section1.niveau,
+          stageNumOrder: stage1.numOrder,
+          sectionNumOrder: section1.numOrder,
           jeuValide: false,
         },
       });

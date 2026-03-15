@@ -26,8 +26,10 @@ model Stage {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   section Section[]
+  jeuEnCours     JeuEnCours[]
   descriptions   Paragraphe[]
   jeux           Jeu[]
+  palmares       Palmares[]
 }
 
 model Paragraphe {
@@ -49,6 +51,8 @@ model Section {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   jeux           Jeu[]
+  palmares       Palmares[]
+  jeuEnCours     JeuEnCours[]
   stageId String?
   stage   Stage? @relation(fields: [stageId], references: [id])
 }
@@ -61,13 +65,13 @@ model Jeu {
   statusJeu Status  @default(NEW)
   numOrder  Int
   valide    Boolean @default(false)
+
   stageId   String
   stage     Stage?  @relation(fields: [stageId], references: [id])
-  jeuEnCours JeuEnCours[]
   sectionId String?
   section   Section? @relation(fields: [sectionId], references: [id])
-
   questions Question[]
+  jeuEnCours JeuEnCours[]
 }
 
 model Question {
@@ -108,6 +112,8 @@ model User {
   jeuEnCours     JeuEnCours[]
 
 
+
+
 }
 
 
@@ -120,24 +126,45 @@ enum UserRole {
 
 model Palmares {
   id String @id @default(uuid())
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
-  compteurJeu Int @default(1)
-  stageLength Int @default(1)
   score            Int?
-  jeuNiveauValide String?
-  jeuValide        Boolean @default(false)
+  stage           String
+  stageNumOrder   Int  @default(1)
+  section         String
+  sectionNumOrder Int  @default(1)
+
+  jeuValide       Boolean           @default(false)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  stageId   String?
+  stageRef  Stage?   @relation(fields: [stageId], references: [id])
+
+  sectionId String?
+  sectionRef Section? @relation(fields: [sectionId], references: [id])
+
   createdAt        DateTime          @default(now())
 }
 
-model JeuEnCours{
-  id String @id @default(uuid())
-  stage String
-  section String
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
-  jeuId String?
-  jeu   Jeu?   @relation(fields: [jeuId], references: [id])
+model JeuEnCours {
+  id        String   @id @default(uuid())
+  stage           String
+  stageNumOrder   Int  @default(1)
+  section         String
+  sectionNumOrder Int  @default(1)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  stageId   String?
+  stageRef  Stage?   @relation(fields: [stageId], references: [id])
+
+  sectionId String?
+  sectionRef Section? @relation(fields: [sectionId], references: [id])
+
+  jeuId     String?
+  jeu       Jeu?     @relation(fields: [jeuId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

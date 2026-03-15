@@ -26,40 +26,49 @@ export async function startGameAction() {
 
   if (!existingPalmares) {
     // No palmares: create palmares + jeuEnCours (Stage 1, Section 1), then redirect
-    const [firstStage, firstSection] = await Promise.all([
-      prisma.stage.findFirst({ orderBy: { numOrder: "asc" } }),
-      prisma.section.findFirst({ orderBy: { numOrder: "asc" } }),
-    ]);
-
-    const stageNiveau = firstStage?.niveau ?? "1";
-    const sectionNiveau = firstSection?.niveau ?? "1";
-
-    const firstJeu = await prisma.jeu.findFirst({
-      where: firstStage ? { stageId: firstStage.id } : undefined,
+    const firstStage = await prisma.stage.findFirst({
       orderBy: { numOrder: "asc" },
+      include: { section: { orderBy: { numOrder: "asc" } } },
     });
+    const firstSection = firstStage?.section[0];
+
+    const stageNiveau = firstStage?.niveau ?? "Stage 1";
+    const sectionNiveau = firstSection?.niveau ?? "section 1";
+
+    const firstJeu = firstSection
+      ? await prisma.jeu.findFirst({
+          where: { sectionId: firstSection.id },
+          orderBy: { numOrder: "asc" },
+        })
+      : firstStage
+        ? await prisma.jeu.findFirst({
+            where: { stageId: firstStage.id },
+            orderBy: { numOrder: "asc" },
+          })
+        : null;
 
     await prisma.palmares.create({
       data: {
         userId: user.id,
-        compteurJeu: 1,
-        stageLength: 1,
         score: 0,
-        jeuNiveauValide: null,
+        stage: stageNiveau,
+        section: sectionNiveau,
+        stageNumOrder: firstStage?.numOrder ?? 1,
+        sectionNumOrder: firstSection?.numOrder ?? 1,
         jeuValide: false,
       },
     });
 
-    if (prisma.jeuEnCours) {
-      await prisma.jeuEnCours.create({
-        data: {
-          userId: user.id,
-          stage: stageNiveau,
-          section: sectionNiveau,
-          jeuId: firstJeu?.id ?? null,
-        },
-      });
-    }
+    await prisma.jeuEnCours.create({
+      data: {
+        userId: user.id,
+        stage: stageNiveau,
+        section: sectionNiveau,
+        stageNumOrder: firstStage?.numOrder ?? 1,
+        sectionNumOrder: firstSection?.numOrder ?? 1,
+        jeuId: firstJeu?.id ?? null,
+      },
+    });
   } else {
     // User has palmares: ensure jeuEnCours exists
     if (prisma.jeuEnCours) {
@@ -69,10 +78,20 @@ export async function startGameAction() {
       });
 
       if (!latestJeuEnCours) {
-        const currentJeu = await prisma.jeu.findFirst({
-          where: { numOrder: existingPalmares.compteurJeu },
-          include: { stage: true, section: true },
+        const currentStage = await prisma.stage.findFirst({
+          where: { numOrder: existingPalmares.stageNumOrder },
+          include: { section: { orderBy: { numOrder: "asc" } } },
         });
+        const currentSection = currentStage?.section.find(
+          (s) => s.numOrder === existingPalmares.sectionNumOrder
+        );
+        const currentJeu = currentSection
+          ? await prisma.jeu.findFirst({
+              where: { sectionId: currentSection.id },
+              include: { stage: true, section: true },
+              orderBy: { numOrder: "asc" },
+            })
+          : null;
 
         const stageNiveau = currentJeu?.stage?.niveau ?? "1";
         const sectionNiveau = currentJeu?.section?.niveau ?? "1";
@@ -82,6 +101,8 @@ export async function startGameAction() {
             userId: user.id,
             stage: stageNiveau,
             section: sectionNiveau,
+            stageNumOrder: existingPalmares.stageNumOrder,
+            sectionNumOrder: existingPalmares.sectionNumOrder,
             jeuId: currentJeu?.id ?? null,
           },
         });

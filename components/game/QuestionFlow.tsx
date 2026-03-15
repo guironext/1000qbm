@@ -76,7 +76,26 @@ export default function QuestionFlow({
 
   if (isFinished) {
     const scorePercentage = (score / questions.length) * 100;
-    const isDefeat = scorePercentage < 80;    
+    const isDefeat = scorePercentage < 80;
+
+    if (isSubmitting) {
+      return (
+        <Card className="overflow-hidden border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+          <CardContent className="p-12 flex flex-col items-center justify-center min-h-[300px]">
+            <Image
+              src="/reading.gif"
+              alt="Chargement"
+              width={200}
+              height={200}
+              className="object-contain"
+            />
+            <p className="mt-4 text-lg font-medium text-gray-600 dark:text-gray-400">
+              Chargement…
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
 
     return (
       <Card className="overflow-hidden border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm transform transition-all duration-500 animate-in fade-in zoom-in-95">
@@ -137,12 +156,14 @@ export default function QuestionFlow({
                     </svg>
                   </div>
                   <blockquote className="text-lg md:text-xl text-gray-800 italic leading-relaxed font-serif font-medium relative z-10 px-4">
-                    &ldquo;Fortifiez-vous et ayez du courage… car
-                    l&apos;Éternel, ton Dieu, marche lui-même avec toi; il ne te
-                    délaissera point.&rdquo;
+                    &ldquo;Désolé ! <br />
+                  10 Si tu te laisses abattre au jour de l&apos;adversité, <br />
+                  ta force est bien peu de chose. <br />
+                  (Proverbe 24 : 10) ; donc persévère…. <br />
+&rdquo;
                   </blockquote>
                   <p className="md:text-lg text-blue-700 font-bold tracking-wide mt-4 uppercase text-sm">
-                    — Deutéronome 31:6
+                    — Proverbe 24 : 10
                   </p>
                 </div>
               </div>
@@ -212,11 +233,12 @@ export default function QuestionFlow({
                     </svg>
                   </div>
                   <blockquote className="text-lg md:text-xl text-gray-800 italic leading-relaxed font-medium">
-                    &ldquo;Mais grâce soit rendue à Dieu, qui nous donne la
-                    victoire par notre Seigneur Jésus-Christ.&rdquo;
+                    &ldquo;Félicitations ! <br />
+« 18 Elisée ajouta: Prends maintenant d&apos;autres flèches! Il les prit. Frappe contre le sol! Le roi d&apos;Israël frappa trois coups et s&apos;arrêta. » ( 2 Rois 13 : 18) ; Ne t&apos;arrête pas…
+&rdquo;
                   </blockquote>
                   <p className="text-base md:text-lg text-blue-700 font-semibold mt-4">
-                    — 1 Corinthiens 15:57
+                    — 2 Rois 13 : 18
                   </p>
                 </div>
               </div>
@@ -225,17 +247,27 @@ export default function QuestionFlow({
                 className="mt-8 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 px-12 rounded-full shadow-xl transform transition-transform hover:scale-105"
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!onNiveauSuivant) return;
+                  if (!onNiveauSuivant || isSubmitting) return;
                   setIsSubmitting(true);
-                  try {
-                    await onNiveauSuivant(score);
-                  } finally {
-                    setIsSubmitting(false);
-                  }
+                  await onNiveauSuivant(score);
                 }}
               >
-                {isSubmitting ? "Chargement…" : "Niveau Suivant"}{" "}
-                <ArrowRight className="w-5 h-5 ml-2" />
+                {isSubmitting ? (
+                  <span className="flex items-center gap-3">
+                    <Image
+                      src="/reading.gif"
+                      alt="Chargement"
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                    Chargement…
+                  </span>
+                ) : (
+                  <>
+                    Niveau Suivant <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
               </Button>
             </>
           )}
@@ -290,7 +322,7 @@ export default function QuestionFlow({
                     key={reponse.id}
                     onClick={() => handleReponseClick(reponse)}
                     className={cn(
-                      "group relative p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between",
+                      "group relative p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between shadow-md shadow-amber-500/20",
                       !isAnswered &&
                         "border-gray-100 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-gray-700/50 hover:shadow-md",
                       isSelected &&

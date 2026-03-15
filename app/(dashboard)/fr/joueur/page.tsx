@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { startGameAction } from "@/lib/actions/playerActions";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -52,6 +53,8 @@ const features = [
 ];
 
 export default function JoueurWelcomePage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-[70vh] container mx-auto px-4 py-8 flex flex-col justify-center">
       <div className="max-w-6xl mx-auto">
@@ -165,8 +168,7 @@ export default function JoueurWelcomePage() {
         </div>
 
         {/* Button under the content */}
-        <motion.form
-          action={startGameAction}
+        <motion.div
           className="flex flex-col items-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,22 +180,15 @@ export default function JoueurWelcomePage() {
             className="w-full max-w-md"
           >
             <Button
-              type="submit"
+              type="button"
               size="lg"
+              onClick={() => router.push("/fr/joueur/stage")}
               className="w-full py-8 text-xl font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/30 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 transition-all duration-300 hover:shadow-2xl rounded-xl"
             >
               Commencer à jouer
             </Button>
           </motion.div>
-          <motion.p
-            className="mt-4 text-sm text-gray-500 dark:text-gray-400"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            Connectez-vous pour sauvegarder votre progression
-          </motion.p>
-        </motion.form>
+        </motion.div>
       </div>
     </div>
   );
