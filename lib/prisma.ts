@@ -18,11 +18,9 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-// Use cached client only if it has jeuEnCours (avoids stale client after schema changes)
 const cached = globalForPrisma.prisma;
-const hasJeuEnCours = cached && typeof (cached as { jeuEnCours?: unknown }).jeuEnCours !== "undefined";
 
-export const prisma = hasJeuEnCours ? cached : (globalForPrisma.prisma = createPrismaClient());
+export const prisma = cached ?? (globalForPrisma.prisma = createPrismaClient());
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

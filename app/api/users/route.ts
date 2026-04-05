@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const users = await prisma.user.findMany({
       include: {
-        palmares: true,
+        gameBooks: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -74,8 +74,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Delete palmares first (foreign key constraint)
-    await prisma.palmares.deleteMany({
+    await prisma.gameBook.deleteMany({
       where: { userId: id },
     });
 

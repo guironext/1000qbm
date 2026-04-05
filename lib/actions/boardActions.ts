@@ -3,103 +3,111 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { GameBookKind, GameBookStatus } from "@/lib/generated/prisma/index.js";
 
-export async function getEmboardPageData() {
-  const { userId, redirectToSignIn } = await auth();
-
-  if (!userId) {
-    return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      jeuEnCours: {
-        orderBy: { updatedAt: "desc" },
-      },
-    },
-  });
-
+async function loadUserOrThrow(clerkId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkId } });
   if (!user) {
     throw new Error("User not found");
   }
+  return user;
+}
 
-  const latestJeuEnCours = user.jeuEnCours?.[0];
-  if (!latestJeuEnCours) {
-    redirect("/fr/joueur");
+/** Active run: one STAGE row in progress for this user. */
+export async function getActiveStageBook(userId: string) {
+  return prisma.gameBook.findFirst({
+    where: {
+      userId,
+      kind: GameBookKind.STAGE,
+      stageStatus: GameBookStatus.EN_COURS,
+      stageAccomplished: false,
+    },
+    orderBy: { updatedAt: "desc" },
+    include: { stage: true },
+  });
+}
+
+async function completedSectionIdsForStage(
+  userId: string,
+  sectionIds: string[],
+): Promise<Set<string>> {
+  if (sectionIds.length === 0) return new Set();
+  const books = await prisma.gameBook.findMany({
+    where: {
+      userId,
+      kind: GameBookKind.SECTION,
+      targetId: { in: sectionIds },
+      sectionValidated: true,
+      sectionStatus: GameBookStatus.VALIDE,
+    },
+  });
+  return new Set(books.map((b) => b.targetId));
+}
+
+/** Smallest numOrder not yet validated; if all done, returns last numOrder + 1. */
+function nextPlayableNumOrder(
+  sections: { id: string; numOrder: number }[],
+  doneIds: Set<string>,
+): number {
+  const sorted = [...sections].sort((a, b) => a.numOrder - b.numOrder);
+  for (const s of sorted) {
+    if (!doneIds.has(s.id)) return s.numOrder;
   }
+  const last = sorted[sorted.length - 1];
+  return last ? last.numOrder + 1 : 1;
+}
 
-  const currentStage = await prisma.stage.findFirst({
-    where: { niveau: latestJeuEnCours.stage },
-    include: { descriptions: true },
+/**
+ * Union: sections with `stageId`, plus any section referenced by a `Jeu` of this stage
+ * (avoids missing rows when only some sections have `stageId` set).
+ */
+export async function resolveSectionsForStage(stageId: string) {
+  const byRelation = await prisma.section.findMany({
+    where: { stageId },
   });
 
-  if (!currentStage) {
-    redirect("/fr/joueur");
+  const jeuRows = await prisma.jeu.findMany({
+    where: { stageId, sectionId: { not: null } },
+    select: { sectionId: true },
+    distinct: ["sectionId"],
+  });
+  const fromJeuIds = jeuRows
+    .map((r) => r.sectionId)
+    .filter((id): id is string => id != null);
+
+  const fromJeux =
+    fromJeuIds.length > 0
+      ? await prisma.section.findMany({
+          where: { id: { in: fromJeuIds } },
+        })
+      : [];
+
+  const merged = new Map<string, (typeof byRelation)[0]>();
+  for (const s of [...byRelation, ...fromJeux]) {
+    merged.set(s.id, s);
   }
 
-  return {
-    stage: currentStage,
-  };
+  return [...merged.values()].sort((a, b) => a.numOrder - b.numOrder);
 }
 
 export async function getStagePageData() {
   const { userId, redirectToSignIn } = await auth();
-
   if (!userId) {
     return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
   }
+  const user = await loadUserOrThrow(userId);
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      palmares: { orderBy: { createdAt: "desc" } },
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
-    },
-  });
+  const activeBook = await getActiveStageBook(user.id);
 
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  const hasPalmares = user.palmares && user.palmares.length > 0;
-
-  if (!hasPalmares) {
-    // Create palmares with defaults
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: "Stage 1",
-        section: "Session 1",
-        stageNumOrder: 1,
-        sectionNumOrder: 1,
-        jeuValide: false,
-      },
-    });
-
-    // Create jeuEnCours for current user
-    await prisma.jeuEnCours.create({
-      data: {
-        userId: user.id,
-        stage: "Stage 1",
-        section: "Session 1",
-        stageNumOrder: 1,
-        sectionNumOrder: 1,
-      },
-    });
-  }
-
-  // Get stage: use jeuEnCours.stageNumOrder (user has palmares) or 1 (new user)
-  const latestJeuEnCours = user.jeuEnCours?.[0];
-  const stageNumOrder = hasPalmares && latestJeuEnCours
-    ? latestJeuEnCours.stageNumOrder
-    : 1;
-
-  const stage = await prisma.stage.findFirst({
-    where: { numOrder: stageNumOrder },
-    include: { descriptions: true },
-  });
+  const stage = activeBook
+    ? await prisma.stage.findUnique({
+        where: { id: activeBook.stageId },
+        include: { descriptions: true },
+      })
+    : await prisma.stage.findFirst({
+        where: { numOrder: 1 },
+        include: { descriptions: true },
+      });
 
   if (!stage) {
     redirect("/fr/joueur");
@@ -108,258 +116,138 @@ export async function getStagePageData() {
   return { stage };
 }
 
-export async function getBoardPageData() {
+/** Ensures a STAGE GameBook exists, then sends the player to the gameboard. */
+export async function commenceGame() {
   const { userId, redirectToSignIn } = await auth();
-
   if (!userId) {
     return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
   }
+  const user = await loadUserOrThrow(userId);
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      palmares: {
-        orderBy: { createdAt: "desc" },
+  let active = await getActiveStageBook(user.id);
+
+  if (!active) {
+    const stageCount = await prisma.stage.count();
+    const completedStages = await prisma.gameBook.count({
+      where: {
+        userId: user.id,
+        kind: GameBookKind.STAGE,
+        stageValidated: true,
+        stageStatus: GameBookStatus.VALIDE,
       },
-    },
+    });
+    if (stageCount > 0 && completedStages >= stageCount) {
+      redirect("/fr/joueur/stage/felicitation");
+    }
+
+    const firstStage = await prisma.stage.findFirst({
+      orderBy: { numOrder: "asc" },
+    });
+    if (!firstStage) {
+      redirect("/fr/joueur");
+    }
+    active = await prisma.gameBook.create({
+      data: {
+        userId: user.id,
+        kind: GameBookKind.STAGE,
+        targetId: firstStage.id,
+        stageId: firstStage.id,
+        stageStatus: GameBookStatus.EN_COURS,
+        stageValidated: false,
+        stageAccomplished: false,
+      },
+      include: { stage: true },
+    });
+  }
+
+  redirect("/fr/joueur/stage/gameboard");
+}
+
+/** @deprecated Use commenceGame */
+export async function handleCommenconsClick() {
+  return commenceGame();
+}
+
+export type GameboardSectionVM = {
+  id: string;
+  title: string;
+  image: string;
+  numOrder: number;
+  unlocked: boolean;
+  completed: boolean;
+};
+
+export async function getGameboardPageData() {
+  const { userId, redirectToSignIn } = await auth();
+  if (!userId) {
+    return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
+  }
+  const user = await loadUserOrThrow(userId);
+
+  const activeBook = await getActiveStageBook(user.id);
+  if (!activeBook) {
+    redirect("/fr/joueur/stage");
+  }
+
+  const stage = await prisma.stage.findUnique({
+    where: { id: activeBook.stageId },
   });
 
-  if (!user) {
-    throw new Error("User not found");
+  if (!stage) {
+    redirect("/fr/joueur/stage");
   }
 
-  // Get latest palmares
-  const latestPalmares = user.palmares[0];
-  if (!latestPalmares) {
-    redirect("/fr/joueur");
-  }
+  const stageSections = await resolveSectionsForStage(stage.id);
+  const sectionIds = stageSections.map((s) => s.id);
+  const doneIds = await completedSectionIdsForStage(user.id, sectionIds);
+  const thresholdOrder = nextPlayableNumOrder(stageSections, doneIds);
 
-  // Find stage by stageNumOrder from palmares
-  const [currentStage, allStages, allSections, allJeux] = await Promise.all([
-    prisma.stage.findFirst({
-      where: { numOrder: latestPalmares.stageNumOrder },
-      include: { descriptions: true },
-    }),
-    prisma.stage.findMany({ orderBy: { numOrder: "asc" } }),
-    prisma.section.findMany({ orderBy: { numOrder: "asc" } }),
-    prisma.jeu.findMany({ orderBy: { numOrder: "asc" } }),
-  ]);
-
-  if (!currentStage) {
-    return {
-      user,
-      currentStage: null,
-      allStages,
-      allSections,
-      allJeux,
-      latestPalmares,
-    };
-  }
+  const sections: GameboardSectionVM[] = stageSections.map((s) => ({
+    id: s.id,
+    title: s.title,
+    image: s.image,
+    numOrder: s.numOrder,
+    unlocked: s.numOrder <= thresholdOrder,
+    completed: doneIds.has(s.id),
+  }));
 
   return {
-    user,
-    currentStage,
-    allStages,
-    allSections,
-    allJeux,
-    latestPalmares,
+    stage: {
+      id: stage.id,
+      title: stage.title,
+      niveau: stage.niveau,
+      image: stage.image,
+    },
+    sections,
   };
 }
 
-export async function handleCommenconsClick() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
-    },
-  });
-
-  if (!user || !user.jeuEnCours?.[0]) {
-    throw new Error("User or jeuEnCours not found");
-  }
-
-  const latestJeuEnCours = user.jeuEnCours[0];
-
-  // Find stage where numOrder === jeuEnCours.stageNumOrder
-  const stage = await prisma.stage.findFirst({
-    where: { numOrder: latestJeuEnCours.stageNumOrder },
-    include: { section: { orderBy: { numOrder: "asc" } } },
-  });
-
-  if (!stage) {
-    redirect("/fr/joueur");
-  }
-
-  // Select section where section.numOrder === jeuEnCours.sectionNumOrder
-  const section =
-    stage.section.find(
-      (s) => s.numOrder === latestJeuEnCours.sectionNumOrder
-    ) ??
-    (await prisma.section.findFirst({
-      where: {
-        numOrder: latestJeuEnCours.sectionNumOrder,
-        stageId: stage.id,
-      },
-    })) ??
-    (await prisma.section.findFirst({
-      where: { numOrder: latestJeuEnCours.sectionNumOrder },
-    }));
-
-  if (!section) {
-    redirect("/fr/joueur");
-  }
-
-  // Set jeuId on jeuEnCours so section page has the correct jeu
-  const firstJeu = await prisma.jeu.findFirst({
-    where: {
-      OR: [{ sectionId: section.id }, { stageId: stage.id }],
-    },
-    orderBy: { numOrder: "asc" },
-  });
-
-  if (firstJeu) {
-    await prisma.jeuEnCours.update({
-      where: { id: latestJeuEnCours.id },
-      data: {
-        stageId: stage.id,
-        sectionId: section.id,
-        jeuId: firstJeu.id,
-      },
-    });
-  }
-
-  redirect(`/fr/joueur/stage/section`);
-}
-
-export async function getSectionPageDataByJeuEnCours() {
+export async function getSectionPlayData(sectionId: string) {
   const { userId, redirectToSignIn } = await auth();
-
   if (!userId) {
     return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
   }
+  const user = await loadUserOrThrow(userId);
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
-    },
-  });
-
-  if (!user) {
-    redirect("/fr/joueur");
+  const activeBook = await getActiveStageBook(user.id);
+  if (!activeBook) {
+    redirect("/fr/joueur/stage");
   }
 
-  const latestJeuEnCours = user.jeuEnCours?.[0];
-  if (!latestJeuEnCours) {
-    redirect("/fr/joueur");
-  }
-
-  // Find stage where numOrder === jeuEnCours.stageNumOrder
-  const stage = await prisma.stage.findFirst({
-    where: { numOrder: latestJeuEnCours.stageNumOrder },
+  const stage = await prisma.stage.findUnique({
+    where: { id: activeBook.stageId },
   });
-
   if (!stage) {
-    redirect("/fr/joueur");
+    redirect("/fr/joueur/stage/gameboard");
   }
 
-  // Select section where section.numOrder === jeuEnCours.sectionNumOrder
-  // Try with stageId first; fallback to numOrder only if sections have stageId null
-  let section = await prisma.section.findFirst({
-    where: {
-      numOrder: latestJeuEnCours.sectionNumOrder,
-      stageId: stage.id,
-    },
-    include: {
-      jeux: {
-        orderBy: { numOrder: "asc" },
-        include: {
-          questions: {
-            orderBy: { orderNum: "asc" },
-            include: { reponses: true },
-          },
-        },
-      },
-    },
-  });
-
-  if (!section) {
-    section = await prisma.section.findFirst({
-      where: { numOrder: latestJeuEnCours.sectionNumOrder },
-      include: {
-        jeux: {
-          orderBy: { numOrder: "asc" },
-          include: {
-            questions: {
-              orderBy: { orderNum: "asc" },
-              include: { reponses: true },
-            },
-          },
-        },
-      },
-    });
+  const stageSections = await resolveSectionsForStage(stage.id);
+  const allowedIds = new Set(stageSections.map((s) => s.id));
+  if (!allowedIds.has(sectionId)) {
+    redirect("/fr/joueur/stage/gameboard");
   }
 
-  if (!section) {
-    redirect("/fr/joueur");
-  }
-
-  // Prefer jeu from jeuEnCours if it belongs to this section, else first jeu in section
-  let jeu =
-    (latestJeuEnCours.jeuId &&
-      section.jeux.find((j) => j.id === latestJeuEnCours.jeuId)) ||
-    section.jeux[0];
-
-  // Fallback: if section has no jeux, get first jeu from stage (jeux with stageId or sectionId)
-  if (!jeu) {
-    const stageJeu = await prisma.jeu.findFirst({
-      where: {
-        OR: [{ sectionId: section.id }, { stageId: stage.id }],
-      },
-      orderBy: { numOrder: "asc" },
-      include: {
-        questions: {
-          orderBy: { orderNum: "asc" },
-          include: { reponses: true },
-        },
-      },
-    });
-    if (!stageJeu) redirect("/fr/joueur");
-    jeu = stageJeu;
-  }
-
-  if (!jeu) {
-    redirect("/fr/joueur");
-  }
-
-  return { section, jeu };
-}
-
-export async function getSectionPageData(sectionId: string) {
-  const { userId, redirectToSignIn } = await auth();
-
-  if (!userId) {
-    return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
-    },
-  });
-
-  if (!user) {
-    redirect("/fr/joueur");
-  }
-
-  const section = await prisma.section.findUnique({
+  const section = await prisma.section.findFirst({
     where: { id: sectionId },
     include: {
       jeux: {
@@ -375,494 +263,224 @@ export async function getSectionPageData(sectionId: string) {
   });
 
   if (!section) {
-    redirect("/fr/joueur");
+    redirect("/fr/joueur/stage/gameboard");
   }
 
-  // Prefer jeu from jeuEnCours if it belongs to this section, else first jeu
-  const latestJeuEnCours = user.jeuEnCours?.[0];
-  const jeu =
-    (latestJeuEnCours?.jeuId &&
-      section.jeux.find((j) => j.id === latestJeuEnCours.jeuId)) ||
-    section.jeux[0];
+  const doneIds = await completedSectionIdsForStage(
+    user.id,
+    stageSections.map((s) => s.id),
+  );
+  const thresholdOrder = nextPlayableNumOrder(stageSections, doneIds);
 
-  if (!jeu) {
-    redirect("/fr/joueur");
+  if (section.numOrder > thresholdOrder) {
+    redirect("/fr/joueur/stage/gameboard");
   }
 
-  return { section, jeu };
-}
-
-export async function handleVictory(score: number) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const jeu = section.jeux[0];
+  if (!jeu || !jeu.questions.length) {
+    redirect("/fr/joueur/stage/gameboard");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      palmares: { orderBy: { createdAt: "desc" } },
-    },
-  });
-
-  if (!user || !user.palmares[0]) {
-    throw new Error("User or palmares not found");
-  }
-
-  const currentPalmares = user.palmares[0];
-
-  // Get current stage and sections to determine next position
-  const currentStage = await prisma.stage.findFirst({
-    where: { numOrder: currentPalmares.stageNumOrder },
-    include: { section: { orderBy: { numOrder: "asc" } } },
-  });
-
-  if (!currentStage) {
-    console.error("Stage not found for victory handling");
-    redirect(`/fr/joueur/emboard`);
-  }
-
-  const sectionsInStage = currentStage.section.length;
-  const isLastSection =
-    currentPalmares.sectionNumOrder >= sectionsInStage;
-
-  // 1. Update current palmares
-  await prisma.palmares.update({
-    where: { id: currentPalmares.id },
-    data: { score, jeuValide: true },
-  });
-
-  if (isLastSection) {
-    // Move to next stage
-    const nextStage = await prisma.stage.findFirst({
-      where: { numOrder: currentStage.numOrder + 1 },
-      include: { section: { orderBy: { numOrder: "asc" } } },
-    });
-    if (!nextStage || !nextStage.section[0]) {
-      redirect(`/fr/joueur/emboard`);
-    }
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: nextStage.niveau,
-        section: nextStage.section[0].niveau,
-        stageNumOrder: nextStage.numOrder,
-        sectionNumOrder: nextStage.section[0].numOrder,
-        jeuValide: false,
-      },
-    });
-    redirect(`/fr/joueur/transitStage`);
-  } else {
-    // Move to next section in same stage
-    const nextSection = currentStage.section.find(
-      (s) => s.numOrder === currentPalmares.sectionNumOrder + 1
-    );
-    if (!nextSection) {
-      redirect(`/fr/joueur/emboard`);
-    }
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: currentStage.niveau,
-        section: nextSection.niveau,
-        stageNumOrder: currentPalmares.stageNumOrder,
-        sectionNumOrder: nextSection.numOrder,
-        jeuValide: false,
-      },
-    });
-    redirect(`/fr/joueur/emboard`);
-  }
-}
-
-export async function getJeuSectionPageData() {
-  const { userId, redirectToSignIn } = await auth();
-
-  if (!userId) {
-    return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      jeuEnCours: {
-        orderBy: { updatedAt: "desc" },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  const latestJeuEnCours = user.jeuEnCours?.[0];
-  if (!latestJeuEnCours) {
-    redirect("/fr/joueur");
-  }
-
-  // Get section where section.niveau === jeuEnCours.section (and belongs to current stage)
-  const currentStage = await prisma.stage.findFirst({
-    where: { niveau: latestJeuEnCours.stage },
-  });
-
-  if (!currentStage) {
-    redirect("/fr/joueur");
-  }
-
-  // Get the jeu from jeuEnCours.jeuId, or fallback: find jeu by stage
-  const jeu = latestJeuEnCours.jeuId
-    ? await prisma.jeu.findUnique({
-        where: { id: latestJeuEnCours.jeuId },
-        include: {
-          section: true,
-          questions: {
-            orderBy: { orderNum: "asc" },
-            include: { reponses: true },
-          },
-        },
-      })
-    : await prisma.jeu.findFirst({
-        where: { stageId: currentStage.id },
-        orderBy: { numOrder: "asc" },
-        include: {
-          section: true,
-          questions: {
-            orderBy: { orderNum: "asc" },
-            include: { reponses: true },
-          },
-        },
-      });
-
-  if (!jeu) {
-    redirect("/fr/joueur");
-  }
-
-  // Section: prefer jeu.section, else find by niveau (in current stage first, then any)
-  let section = jeu.section;
-  if (!section) {
-    section =
-      (await prisma.section.findFirst({
-        where: {
-          niveau: latestJeuEnCours.section,
-          stageId: currentStage.id,
-        },
-      })) ??
-      (await prisma.section.findFirst({
-        where: { niveau: latestJeuEnCours.section },
-      }));
-  }
+  const questions = jeu.questions.map((q) => ({
+    id: q.id,
+    intitule: q.intitule,
+    reponses: q.reponses.map((r) => ({
+      id: r.id,
+      intitule: r.intitule,
+      isCorrect: r.isCorrect,
+    })),
+  }));
 
   return {
-    section,
-    jeu,
+    section: {
+      id: section.id,
+      title: section.title,
+      image: section.image,
+      numOrder: section.numOrder,
+    },
+    jeu: {
+      id: jeu.id,
+      niveau: jeu.niveau,
+    },
+    questions,
   };
 }
 
+export type SectionAnswerPayload = {
+  questionId: string;
+  reponseId: string;
+};
+
 /**
- * Handles "Niveau Suivant" for the stage/section flow.
- * Updates palmares, checks if all sections in stage are completed,
- * then either advances to next stage (/fr/joueur/stage) or next section (/fr/joueur/stage/section).
+ * Verifies answers in DB, applies 80% rule, updates GameBook, redirects.
+ * On failure returns { ok: false, message } (no redirect).
  */
-export async function handleNiveauSuivantStage(score: number) {
-  const { userId } = await auth();
-
+export async function completeSectionPlay(
+  sectionId: string,
+  answers: SectionAnswerPayload[],
+): Promise<{ ok: false; message: string } | undefined> {
+  const { userId, redirectToSignIn } = await auth();
   if (!userId) {
-    throw new Error("Unauthorized");
+    redirectToSignIn({ returnBackUrl: "/fr/joueur" });
+    return { ok: false, message: "Non authentifié." };
+  }
+  const user = await loadUserOrThrow(userId);
+
+  const activeBook = await getActiveStageBook(user.id);
+  if (!activeBook) {
+    return { ok: false, message: "Aucun parcours en cours." };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
+  const stage = await prisma.stage.findUnique({
+    where: { id: activeBook.stageId },
+  });
+  if (!stage) {
+    return { ok: false, message: "Étape introuvable." };
+  }
+
+  const stageSections = await resolveSectionsForStage(stage.id);
+  const allowedIds = new Set(stageSections.map((s) => s.id));
+  if (!allowedIds.has(sectionId)) {
+    return { ok: false, message: "Section introuvable." };
+  }
+
+  const section = await prisma.section.findFirst({
+    where: { id: sectionId },
     include: {
-      palmares: { orderBy: { createdAt: "desc" } },
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
+      jeux: {
+        orderBy: { numOrder: "asc" },
+        include: {
+          questions: {
+            orderBy: { orderNum: "asc" },
+            include: { reponses: true },
+          },
+        },
+      },
     },
   });
 
-  if (!user || !user.jeuEnCours[0]) {
-    throw new Error("User or jeuEnCours not found");
+  if (!section) {
+    return { ok: false, message: "Section introuvable." };
   }
 
-  const latestJeuEnCours = user.jeuEnCours[0];
-
-  // Find palmares for current stage/section (matching jeuEnCours)
-  let currentPalmares = user.palmares.find(
-    (p) =>
-      p.stageNumOrder === latestJeuEnCours.stageNumOrder &&
-      p.sectionNumOrder === latestJeuEnCours.sectionNumOrder
+  const doneIds = await completedSectionIdsForStage(
+    user.id,
+    stageSections.map((s) => s.id),
   );
+  const firstIncomplete = stageSections.find((s) => !doneIds.has(s.id));
+  const isReplay = doneIds.has(section.id);
+  if (!isReplay && firstIncomplete && section.id !== firstIncomplete.id) {
+    return { ok: false, message: "Complétez les sections dans l’ordre." };
+  }
 
-  // Create palmares if missing (e.g. first time in section)
-  if (!currentPalmares) {
-    const currentStageForCreate = await prisma.stage.findFirst({
-      where: { numOrder: latestJeuEnCours.stageNumOrder },
-      include: { section: true },
-    });
-    const sectionForCreate = currentStageForCreate?.section.find(
-      (s) => s.numOrder === latestJeuEnCours.sectionNumOrder
-    );
-    if (!currentStageForCreate || !sectionForCreate) {
-      throw new Error("Stage or section not found");
+  const jeu = section.jeux[0];
+  if (!jeu?.questions.length) {
+    return { ok: false, message: "Aucune question pour cette section." };
+  }
+
+  const questions = jeu.questions;
+  if (answers.length !== questions.length) {
+    return { ok: false, message: "Réponses incomplètes." };
+  }
+
+  let score = 0;
+  for (const q of questions) {
+    const a = answers.find((x) => x.questionId === q.id);
+    if (!a) {
+      return { ok: false, message: "Réponses invalides." };
     }
-    currentPalmares = await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: latestJeuEnCours.stage,
-        section: latestJeuEnCours.section,
-        stageNumOrder: latestJeuEnCours.stageNumOrder,
-        sectionNumOrder: latestJeuEnCours.sectionNumOrder,
-        jeuValide: false,
-        stageId: currentStageForCreate.id,
-        sectionId: sectionForCreate.id,
-      },
-    });
+    const rep = q.reponses.find((r) => r.id === a.reponseId);
+    if (!rep || rep.questionId !== q.id) {
+      return { ok: false, message: "Réponse non reconnue." };
+    }
+    if (rep.isCorrect) score++;
   }
 
-  // 1. Update palmares with score and jeuValide
-  await prisma.palmares.update({
-    where: { id: currentPalmares.id },
-    data: { score, jeuValide: true },
-  });
-
-  // 2. Get stage where numOrder === jeuEnCours.stageNumOrder
-  const currentStage = await prisma.stage.findFirst({
-    where: { numOrder: latestJeuEnCours.stageNumOrder },
-    include: { section: { orderBy: { numOrder: "asc" } } },
-  });
-
-  if (!currentStage) {
-    redirect("/fr/joueur");
+  const ratio = score / questions.length;
+  if (ratio < 0.8) {
+    return { ok: false, message: "Score insuffisant (minimum 80%)." };
   }
 
-  // 3. Count palmares for this stage (after our update)
-  const palmaresCountForStage = await prisma.palmares.count({
+  await prisma.gameBook.upsert({
     where: {
+      userId_kind_targetId: {
+        userId: user.id,
+        kind: GameBookKind.SECTION,
+        targetId: section.id,
+      },
+    },
+    create: {
       userId: user.id,
-      stageNumOrder: latestJeuEnCours.stageNumOrder,
+      kind: GameBookKind.SECTION,
+      targetId: section.id,
+      stageId: stage.id,
+      sectionId: section.id,
+      sectionValidated: true,
+      sectionAccomplished: true,
+      sectionStatus: GameBookStatus.VALIDE,
+      stageStatus: GameBookStatus.EN_COURS,
+      stageValidated: false,
+      stageAccomplished: false,
+    },
+    update: {
+      sectionValidated: true,
+      sectionAccomplished: true,
+      sectionStatus: GameBookStatus.VALIDE,
     },
   });
 
-  const sectionsInStage = currentStage.section.length;
-  const allSectionsCompleted = sectionsInStage === palmaresCountForStage;
+  const doneAfter = await completedSectionIdsForStage(
+    user.id,
+    stageSections.map((s) => s.id),
+  );
+  const allDone = stageSections.every((s) => doneAfter.has(s.id));
 
-  if (allSectionsCompleted) {
-    // All sections in stage completed -> move to next stage
+  if (allDone) {
+    await prisma.gameBook.update({
+      where: { id: activeBook.id },
+      data: {
+        stageValidated: true,
+        stageAccomplished: true,
+        stageStatus: GameBookStatus.VALIDE,
+      },
+    });
+
     const nextStage = await prisma.stage.findFirst({
-      where: { numOrder: currentStage.numOrder + 1 },
-      include: { section: { orderBy: { numOrder: "asc" } } },
+      where: { numOrder: stage.numOrder + 1 },
     });
 
-    if (!nextStage || !nextStage.section[0]) {
+    if (nextStage) {
+      await prisma.gameBook.create({
+        data: {
+          userId: user.id,
+          kind: GameBookKind.STAGE,
+          targetId: nextStage.id,
+          stageId: nextStage.id,
+          stageStatus: GameBookStatus.EN_COURS,
+          stageValidated: false,
+          stageAccomplished: false,
+        },
+      });
       redirect("/fr/joueur/stage");
     }
 
-    const firstSectionOfNextStage = nextStage.section[0];
-
-    // Create palmares for the new stage's first section (needed for next Niveau Suivant)
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: nextStage.niveau,
-        section: firstSectionOfNextStage.niveau,
-        stageNumOrder: nextStage.numOrder,
-        sectionNumOrder: firstSectionOfNextStage.numOrder,
-        jeuValide: false,
-        stageId: nextStage.id,
-        sectionId: firstSectionOfNextStage.id,
-      },
-    });
-
-    await prisma.jeuEnCours.update({
-      where: { id: latestJeuEnCours.id },
-      data: {
-        stage: nextStage.niveau,
-        section: firstSectionOfNextStage.niveau,
-        stageNumOrder: nextStage.numOrder,
-        sectionNumOrder: firstSectionOfNextStage.numOrder,
-        stageId: nextStage.id,
-        sectionId: firstSectionOfNextStage.id,
-        jeuId: null,
-      },
-    });
-
-    redirect("/fr/joueur/stage");
-  } else {
-    // More sections to complete -> create new palmares, update jeuEnCours, go to next section
-    const nextSection = currentStage.section.find(
-      (s) => s.numOrder === latestJeuEnCours.sectionNumOrder + 1
-    );
-
-    if (!nextSection) {
-      redirect("/fr/joueur/stage");
-    }
-
-    const nextJeu = await prisma.jeu.findFirst({
-      where: { sectionId: nextSection.id },
-      orderBy: { numOrder: "asc" },
-    });
-
-    // Create new palmares for next section
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: currentStage.niveau,
-        section: nextSection.niveau,
-        stageNumOrder: currentStage.numOrder,
-        sectionNumOrder: nextSection.numOrder,
-        jeuValide: false,
-        stageId: currentStage.id,
-        sectionId: nextSection.id,
-      },
-    });
-
-    // Update jeuEnCours for next section
-    await prisma.jeuEnCours.update({
-      where: { id: latestJeuEnCours.id },
-      data: {
-        stage: currentStage.niveau,
-        section: nextSection.niveau,
-        stageNumOrder: currentStage.numOrder,
-        sectionNumOrder: nextSection.numOrder,
-        stageId: currentStage.id,
-        sectionId: nextSection.id,
-        jeuId: nextJeu?.id ?? null,
-      },
-    });
-
-    redirect("/fr/joueur/stage/section");
+    redirect("/fr/joueur/stage/felicitation");
   }
+
+  redirect(`/fr/joueur/stage/section/${sectionId}/bravo`);
 }
 
-export async function handleNiveauSuivant(score: number) {
-  const { userId } = await auth();
-
+export async function goToGameboardFromBravo() {
+  const { userId, redirectToSignIn } = await auth();
   if (!userId) {
-    throw new Error("Unauthorized");
+    return redirectToSignIn({ returnBackUrl: "/fr/joueur" });
   }
-
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-    include: {
-      palmares: { orderBy: { createdAt: "desc" } },
-      jeuEnCours: { orderBy: { updatedAt: "desc" } },
-    },
-  });
-
-  if (!user || !user.palmares[0] || !user.jeuEnCours[0]) {
-    throw new Error("User, palmares or jeuEnCours not found");
-  }
-
-  const latestPalmares = user.palmares[0];
-  const latestJeuEnCours = user.jeuEnCours[0];
-
-  const currentStage = await prisma.stage.findFirst({
-    where: { numOrder: latestPalmares.stageNumOrder },
-    include: { section: { orderBy: { numOrder: "asc" } } },
-  });
-
-  if (!currentStage) {
-    redirect("/fr/joueur");
-  }
-
-  const sectionsInStage = currentStage.section.length;
-  const allSectionsInStageCompleted =
-    latestPalmares.sectionNumOrder >= sectionsInStage;
-
-  // Update current palmares with score and validation
-  await prisma.palmares.update({
-    where: { id: latestPalmares.id },
-    data: { score, jeuValide: true },
-  });
-
-  if (!allSectionsInStageCompleted) {
-    // NO: More sections to complete in current stage
-    const nextSection = currentStage.section.find(
-      (s) => s.numOrder === latestPalmares.sectionNumOrder + 1
-    );
-    if (!nextSection) {
-      redirect("/fr/joueur/emboard");
-    }
-
-    const nextJeu = await prisma.jeu.findFirst({
-      where: { sectionId: nextSection.id },
-      orderBy: { numOrder: "asc" },
-    });
-
-    await prisma.jeuEnCours.update({
-      where: { id: latestJeuEnCours.id },
-      data: {
-        stage: currentStage.niveau,
-        section: nextSection.niveau,
-        stageNumOrder: currentStage.numOrder,
-        sectionNumOrder: nextSection.numOrder,
-        jeuId: nextJeu?.id ?? null,
-      },
-    });
-
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: currentStage.niveau,
-        section: nextSection.niveau,
-        stageNumOrder: latestPalmares.stageNumOrder,
-        sectionNumOrder: nextSection.numOrder,
-        jeuValide: false,
-      },
-    });
-
-    redirect("/fr/joueur/emboard/jeuSection");
-  } else {
-    // YES: All sections in stage completed - move to next stage
-    const nextStage = await prisma.stage.findFirst({
-      where: { numOrder: currentStage.numOrder + 1 },
-      include: { section: { orderBy: { numOrder: "asc" } } },
-    });
-
-    if (!nextStage || !nextStage.section[0]) {
-      redirect("/fr/joueur/emboard");
-    }
-
-    const firstSectionOfNextStage = nextStage.section[0];
-    const nextJeu = await prisma.jeu.findFirst({
-      where: { sectionId: firstSectionOfNextStage.id },
-      orderBy: { numOrder: "asc" },
-    });
-
-    await prisma.jeuEnCours.update({
-      where: { id: latestJeuEnCours.id },
-      data: {
-        stage: nextStage.niveau,
-        section: firstSectionOfNextStage.niveau,
-        stageNumOrder: nextStage.numOrder,
-        sectionNumOrder: firstSectionOfNextStage.numOrder,
-        jeuId: nextJeu?.id ?? null,
-      },
-    });
-
-    await prisma.palmares.create({
-      data: {
-        userId: user.id,
-        score: 0,
-        stage: nextStage.niveau,
-        section: firstSectionOfNextStage.niveau,
-        stageNumOrder: nextStage.numOrder,
-        sectionNumOrder: firstSectionOfNextStage.numOrder,
-        jeuValide: false,
-      },
-    });
-
-    redirect("/fr/joueur/emboard");
-  }
+  await loadUserOrThrow(userId);
+  redirect("/fr/joueur/stage/gameboard");
 }
 
 export async function getHeaderData() {
   const { userId } = await auth();
-
   if (!userId) {
     return null;
   }
@@ -870,8 +488,14 @@ export async function getHeaderData() {
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
     include: {
-      palmares: {
-        orderBy: { createdAt: "desc" },
+      gameBooks: {
+        where: { kind: GameBookKind.SECTION, sectionStatus: GameBookStatus.VALIDE },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        include: {
+          stage: true,
+          section: true,
+        },
       },
     },
   });
@@ -880,56 +504,58 @@ export async function getHeaderData() {
     return null;
   }
 
-  // Get unique (stageNumOrder, sectionNumOrder) pairs from palmares
-  const stageSectionPairs = [
-    ...new Set(
-      user.palmares.map((p) => `${p.stageNumOrder}-${p.sectionNumOrder}`)
-    ),
-  ].map((key) => {
-    const [s, sec] = key.split("-").map(Number);
-    return { stageNumOrder: s, sectionNumOrder: sec };
-  });
+  const activeBook = await getActiveStageBook(user.id);
+  let currentProgress: {
+    stageTitle: string;
+    sectionTitle: string | null;
+  } | null = null;
 
-  // Fetch stages and sections to find Jeux for each palmares
-  const stages = await prisma.stage.findMany({
-    where: { numOrder: { in: stageSectionPairs.map((p) => p.stageNumOrder) } },
-    include: {
-      section: {
-        orderBy: { numOrder: "asc" },
-        include: { jeux: { orderBy: { numOrder: "asc" } } },
-      },
-    },
-  });
-
-  const stageMap = new Map(stages.map((s) => [s.numOrder, s]));
-
-  function getJeuForPalmares(p: { stageNumOrder: number; sectionNumOrder: number }) {
-    const stage = stageMap.get(p.stageNumOrder);
-    if (!stage) return null;
-    const section = stage.section.find((sec) => sec.numOrder === p.sectionNumOrder);
-    if (!section || !section.jeux?.length) return null;
-    return section.jeux[0] ?? null;
+  if (activeBook) {
+    const st = await prisma.stage.findUnique({
+      where: { id: activeBook.stageId },
+    });
+    if (st) {
+      const secs = await resolveSectionsForStage(st.id);
+      const done = await completedSectionIdsForStage(
+        user.id,
+        secs.map((s) => s.id),
+      );
+      const next = secs.find((s) => !done.has(s.id));
+      currentProgress = {
+        stageTitle: st.title,
+        sectionTitle: next?.title ?? null,
+      };
+    }
   }
 
-  const palmaresWithJeux = user.palmares.map((p) => ({
-    ...p,
-    jeu: getJeuForPalmares(p) || null,
+  const sectionSummaries = user.gameBooks.map((gb) => ({
+    id: gb.id,
+    score: 0,
+    jeuValide: gb.sectionValidated,
+    jeu: {
+      stage: gb.stage ? { title: gb.stage.title } : null,
+      section: gb.section ? { title: gb.section.title } : null,
+    },
   }));
-
-  const currentPalmaresObj = user.palmares.find((p) => !p.jeuValide) || null;
-
-  const currentPalmares = currentPalmaresObj
-    ? {
-        ...currentPalmaresObj,
-        jeu: getJeuForPalmares(currentPalmaresObj) || null,
-      }
-    : null;
 
   return {
     user: {
-      ...user,
-      palmares: palmaresWithJeux,
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      palmares: sectionSummaries,
     },
-    currentPalmares,
+    currentPalmares: currentProgress
+      ? {
+          score: 0,
+          jeuValide: false,
+          jeu: {
+            stage: { title: currentProgress.stageTitle },
+            section: currentProgress.sectionTitle
+              ? { title: currentProgress.sectionTitle }
+              : null,
+          },
+        }
+      : null,
   };
 }

@@ -6,9 +6,8 @@ async function deleteAllUsers() {
 
     // Use a transaction to ensure all deletions happen atomically
     await prisma.$transaction(async (tx) => {
-      // 1. Delete all palmares (related to users)
-      const palmaresCount = await tx.palmares.deleteMany({});
-      console.log(`Deleted ${palmaresCount.count} palmares records`);
+      const gameBooksCount = await tx.gameBook.deleteMany({});
+      console.log(`Deleted ${gameBooksCount.count} gameBook records`);
 
       // 2. (Skipped) boardIndex no longer exists
 

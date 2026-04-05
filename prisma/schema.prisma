@@ -15,21 +15,21 @@ enum Status {
 }
 
 model Stage {
-  id             String            @id @default(uuid())
-  langue         Langue
-  title          String
-  statusStage    Status            @default(NEW)
-  niveau         String
-  valide         Boolean           @default(false)
-  image          String
-  numOrder       Int
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  section Section[]
-  jeuEnCours     JeuEnCours[]
-  descriptions   Paragraphe[]
-  jeux           Jeu[]
-  palmares       Palmares[]
+  id           String       @id @default(uuid())
+  langue       Langue
+  title        String
+  statusStage  Status       @default(NEW)
+  niveau       String
+  valide       Boolean      @default(false)
+  image        String
+  numOrder     Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  section      Section[]
+
+  descriptions Paragraphe[]
+  jeux         Jeu[]
+  gameBooks    GameBook[]
 }
 
 model Paragraphe {
@@ -40,21 +40,23 @@ model Paragraphe {
 }
 
 model Section {
-  id             String            @id @default(uuid())
-  title          String
-  langue         Langue
-  statusSection  Status            @default(NEW)
-  image          String
-  niveau         String
-  valide         Boolean           @default(false)
-  numOrder       Int
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  jeux           Jeu[]
-  palmares       Palmares[]
-  jeuEnCours     JeuEnCours[]
-  stageId String?
-  stage   Stage? @relation(fields: [stageId], references: [id])
+  id            String       @id @default(uuid())
+  title         String
+  langue        Langue
+  statusSection Status       @default(NEW)
+  image         String
+  niveau        String
+  valide        Boolean      @default(false)
+  numOrder      Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  jeux          Jeu[]
+
+  stageId       String?
+  stage         Stage?       @relation(fields: [stageId], references: [id])
+
+  gameBooks     GameBook[]
 }
 
 model Jeu {
@@ -66,12 +68,12 @@ model Jeu {
   numOrder  Int
   valide    Boolean @default(false)
 
-  stageId   String
-  stage     Stage?  @relation(fields: [stageId], references: [id])
-  sectionId String?
-  section   Section? @relation(fields: [sectionId], references: [id])
-  questions Question[]
-  jeuEnCours JeuEnCours[]
+  stageId    String
+  stage      Stage?       @relation(fields: [stageId], references: [id])
+  sectionId  String?
+  section    Section?     @relation(fields: [sectionId], references: [id])
+  questions  Question[]
+
 }
 
 model Question {
@@ -82,40 +84,76 @@ model Question {
   status   Status    @default(NEW)
   valide   Boolean   @default(false)
   reponses Reponse[]
-  
+
   jeuId String?
   jeu   Jeu?    @relation(fields: [jeuId], references: [id])
 }
 
 model Reponse {
-  id        String  @id @default(uuid())
-  intitule  String
-  langue    Langue
-  isCorrect Boolean
+  id         String    @id @default(uuid())
+  intitule   String
+  langue     Langue
+  isCorrect  Boolean
   questionId String?
   question   Question? @relation(fields: [questionId], references: [id])
 }
 
 model User {
-  id             String            @id @default(uuid())
-  clerkId        String            @unique
-  email          String            @unique
-  langue         String?           @default("FR")
-  firstName      String
-  lastName       String
-  country        String?
-  phone          String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  role           UserRole          @default(JOUEUR)
-  palmares       Palmares[]
-  jeuEnCours     JeuEnCours[]
+  id         String       @id @default(uuid())
+  clerkId    String       @unique
+  email      String       @unique
+  langue     String?      @default("FR")
+  firstName  String
+  lastName   String
+  country    String?
+  phone      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  role       UserRole     @default(JOUEUR)
 
-
-
-
+  gameBooks  GameBook[]
 }
 
+/// Per-user game progress: STAGE rows track stage validation / accomplishment;
+/// SECTION rows track validated sections. Use targetId = stageId (STAGE) or sectionId (SECTION).
+model GameBook {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  kind      GameBookKind
+  /// STAGE: same as stageId. SECTION: same as sectionId (unique with userId + kind).
+  targetId  String
+
+  stageId   String
+  stage     Stage          @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  sectionId String?
+  section   Section?       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  stageValidated     Boolean @default(false)
+  stageStatus GameBookStatus    @default(EN_COURS)
+  stageAccomplished  Boolean @default(false)
+  sectionValidated   Boolean @default(false)
+  sectionStatus GameBookStatus    @default(EN_COURS)
+  sectionAccomplished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, kind, targetId])
+  @@index([userId])
+}
+
+enum GameBookStatus {
+  EN_COURS
+  VALIDE
+  ACCOMPLIS
+}
+
+enum GameBookKind {
+  STAGE
+  SECTION
+}
 
 enum UserRole {
   ADMIN
@@ -123,51 +161,6 @@ enum UserRole {
   MANAGER
 }
 
-
-model Palmares {
-  id String @id @default(uuid())
-  score            Int?
-  stage           String
-  stageNumOrder   Int  @default(1)
-  section         String
-  sectionNumOrder Int  @default(1)
-
-  jeuValide       Boolean           @default(false)
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-
-  stageId   String?
-  stageRef  Stage?   @relation(fields: [stageId], references: [id])
-
-  sectionId String?
-  sectionRef Section? @relation(fields: [sectionId], references: [id])
-
-  createdAt        DateTime          @default(now())
-}
-
-model JeuEnCours {
-  id        String   @id @default(uuid())
-  stage           String
-  stageNumOrder   Int  @default(1)
-  section         String
-  sectionNumOrder Int  @default(1)
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-
-  stageId   String?
-  stageRef  Stage?   @relation(fields: [stageId], references: [id])
-
-  sectionId String?
-  sectionRef Section? @relation(fields: [sectionId], references: [id])
-
-  jeuId     String?
-  jeu       Jeu?     @relation(fields: [jeuId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 enum Langue {
   FR

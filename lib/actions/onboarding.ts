@@ -5,125 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { UserRole, Langue } from "@/lib/generated/prisma/index.js";
 
-// Extract palmares initialization logic
+/** Progress is created when the player clicks Commencer (STAGE GameBook). */
 export async function initializePalmaresForUser(userId: string) {
-  try {
-    console.log("Starting palmares initialization for user:", userId);
-
-    // Check if palmares already exists for this user
-    const existingPalmares = await prisma.palmares.findFirst({
-      where: { userId },
-    });
-
-    // If palmares already exists, don't create a new one
-    if (existingPalmares) {
-      console.log("Palmares already exists for user:", userId);
-      return true;
-    }
-
-    // First, let's check what records exist in the database
-    const allStages = await prisma.stage.findMany({
-      orderBy: { numOrder: "asc" },
-    });
-    console.log(
-      "All stages in DB:",
-      allStages.map((s) => ({ title: s.title, status: s.statusStage })),
-    );
-
-    const allSections = await prisma.section.findMany({
-      orderBy: { numOrder: "asc" },
-    });
-    console.log(
-      "All sections in DB:",
-      allSections.map((s) => ({ title: s.title, status: s.statusSection })),
-    );
-
-    // Try to find stage with CURRENT status, fallback to first stage
-    let stage1 = await prisma.stage.findFirst({
-      where: {
-        statusStage: "CURRENT",
-      },
-      orderBy: { numOrder: "asc" },
-    });
-
-    if (!stage1) {
-      stage1 = await prisma.stage.findFirst({
-        orderBy: { numOrder: "asc" },
-      });
-    }
-
-    // Try to find section with CURRENT status, fallback to first section
-    let section1 = await prisma.section.findFirst({
-      where: {
-        statusSection: "CURRENT",
-      },
-      orderBy: { numOrder: "asc" },
-    });
-
-    if (!section1) {
-      section1 = await prisma.section.findFirst({
-        orderBy: { numOrder: "asc" },
-      });
-    }
-
-    // Find the first jeu for the stage and section
-    const firstJeu = await prisma.jeu.findFirst({
-      where: {
-        stageId: stage1?.id,
-        sectionId: section1?.id,
-      },
-      orderBy: { numOrder: "asc" },
-    });
-
-    // If no jeu found with both stage and section, try just with stage
-    let jeu = firstJeu;
-    if (!jeu && stage1) {
-      jeu = await prisma.jeu.findFirst({
-        where: {
-          stageId: stage1.id,
-        },
-        orderBy: { numOrder: "asc" },
-      });
-    }
-
-    console.log(
-      "Debug - stage1:",
-      stage1?.title,
-      "section1:",
-      section1?.title,
-      "jeu:",
-      jeu?.id,
-    );
-
-    if (stage1 && section1 && jeu) {
-      const palmares = await prisma.palmares.create({
-        data: {
-          userId,
-          score: 0,
-          stage: stage1.niveau,
-          section: section1.niveau,
-          stageNumOrder: stage1.numOrder,
-          sectionNumOrder: section1.numOrder,
-          jeuValide: false,
-        },
-      });
-      console.log("Palmares created successfully:", palmares.id);
-      return true;
-    }
-
-    console.log(
-      "Could not create palmares - missing required records. Stage:",
-      !!stage1,
-      "Section:",
-      !!section1,
-      "Jeu:",
-      !!jeu,
-    );
-    return false;
-  } catch (error) {
-    console.error("Error creating palmares:", error);
-    return false;
-  }
+  void userId;
+  return true;
 }
 
 export async function createEmployee(
@@ -153,7 +38,7 @@ export async function createEmployee(
       },
     });
 
-    const newUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         clerkId: user.id,
         email: user.emailAddresses[0].emailAddress,
@@ -165,9 +50,6 @@ export async function createEmployee(
         phone: formData.phone || null,
       },
     });
-
-    // Initialize palmares for new user
-    await initializePalmaresForUser(newUser.id);
 
     revalidatePath("/onboarding");
 

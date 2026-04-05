@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { handleCommenconsClick } from "@/lib/actions/boardActions";
+import { commenceGame } from "@/lib/actions/boardActions";
 
 interface Stage {
   id: string;
@@ -18,14 +18,6 @@ interface BoardPageProps {
 }
 
 const BoardPageClient = ({ stage }: BoardPageProps) => {
-  const handleClick = async () => {
-    try {
-      await handleCommenconsClick();
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto flex flex-col">
@@ -64,12 +56,14 @@ const BoardPageClient = ({ stage }: BoardPageProps) => {
 
         {/* Bottom - Button */}
         <div className="flex justify-center pt-8 pb-4">
-          <Button
-            onClick={handleClick}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-lg text-xl transition-colors shadow-lg hover:shadow-xl"
-          >
-            Commençons
-          </Button>
+          <form action={commenceGame}>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-lg text-xl transition-colors shadow-lg hover:shadow-xl"
+            >
+              Commençons
+            </Button>
+          </form>
         </div>
       </div>
     </div>

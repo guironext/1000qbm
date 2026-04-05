@@ -151,13 +151,6 @@ const HeaderJeu = () => {
         <SignedIn>
           <div className="flex items-center gap-4">
             {/* User Stats Toggle */}
-            <button
-              onClick={() => setShowStats((prev) => !prev)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Afficher les statistiques"
-            >
-              <Trophy className="w-5 h-5 text-amber-600" />
-            </button>
 
             {/* User Info */}
             <div className="text-right">
