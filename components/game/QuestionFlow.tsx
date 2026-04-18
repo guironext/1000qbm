@@ -247,8 +247,10 @@ export default function QuestionFlow({
                 onClick={async () => {
                   setIsSubmitting(true);
                   try {
-                    await onVictorySubmit?.({ score, answers });
-                    setIsSubmitting(false);
+                    const ok = await onVictorySubmit?.({ score, answers });
+                    if (ok !== false) {
+                      setIsSubmitting(false);
+                    }
                   } catch (e) {
                     if (isRedirectError(e)) {
                       setIsSubmitting(false);
