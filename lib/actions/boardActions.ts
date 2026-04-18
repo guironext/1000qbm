@@ -27,7 +27,7 @@ export async function getActiveStageBook(userId: string) {
   });
 }
 
-async function completedSectionIdsForStage(
+export async function completedSectionIdsForStage(
   userId: string,
   sectionIds: string[],
 ): Promise<Set<string>> {
@@ -146,15 +146,25 @@ export async function commenceGame() {
     if (!firstStage) {
       redirect("/fr/joueur");
     }
+    const introSections = await resolveSectionsForStage(firstStage.id);
+    const firstSection = introSections[0] ?? null;
     active = await prisma.gameBook.create({
       data: {
         userId: user.id,
         kind: GameBookKind.STAGE,
         targetId: firstStage.id,
         stageId: firstStage.id,
+        sectionId: firstSection?.id ?? null,
         stageStatus: GameBookStatus.EN_COURS,
         stageValidated: false,
+        stageNiveau: firstStage.niveau,
+        stageNumOrder: firstStage.numOrder,
         stageAccomplished: false,
+        sectionValidated: false,
+        sectionStatus: GameBookStatus.EN_COURS,
+        sectionNiveau: firstSection?.niveau ?? "Session 1",
+        sectionNumOrsder: firstSection?.numOrder ?? 1,
+        sectionAccomplished: false,
       },
       include: { stage: true },
     });
@@ -418,8 +428,12 @@ export async function completeSectionPlay(
       sectionValidated: true,
       sectionAccomplished: true,
       sectionStatus: GameBookStatus.VALIDE,
+      sectionNiveau: section.niveau,
+      sectionNumOrsder: section.numOrder,
       stageStatus: GameBookStatus.EN_COURS,
       stageValidated: false,
+      stageNiveau: stage.niveau,
+      stageNumOrder: stage.numOrder,
       stageAccomplished: false,
     },
     update: {
@@ -450,15 +464,25 @@ export async function completeSectionPlay(
     });
 
     if (nextStage) {
+      const nextSections = await resolveSectionsForStage(nextStage.id);
+      const nextFirst = nextSections[0] ?? null;
       await prisma.gameBook.create({
         data: {
           userId: user.id,
           kind: GameBookKind.STAGE,
           targetId: nextStage.id,
           stageId: nextStage.id,
+          sectionId: nextFirst?.id ?? null,
           stageStatus: GameBookStatus.EN_COURS,
           stageValidated: false,
+          stageNiveau: nextStage.niveau,
+          stageNumOrder: nextStage.numOrder,
           stageAccomplished: false,
+          sectionValidated: false,
+          sectionStatus: GameBookStatus.EN_COURS,
+          sectionNiveau: nextFirst?.niveau ?? "Session 1",
+          sectionNumOrsder: nextFirst?.numOrder ?? 1,
+          sectionAccomplished: false,
         },
       });
       redirect("/fr/joueur/stage");

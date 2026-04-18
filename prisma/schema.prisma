@@ -132,9 +132,14 @@ model GameBook {
 
   stageValidated     Boolean @default(false)
   stageStatus GameBookStatus    @default(EN_COURS)
+  stageNiveau String
+  stageNumOrder Int
   stageAccomplished  Boolean @default(false)
+
   sectionValidated   Boolean @default(false)
   sectionStatus GameBookStatus    @default(EN_COURS)
+  sectionNiveau String
+  sectionNumOrsder Int
   sectionAccomplished Boolean @default(false)
 
   createdAt DateTime @default(now())

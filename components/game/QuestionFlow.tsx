@@ -247,10 +247,13 @@ export default function QuestionFlow({
                 onClick={async () => {
                   setIsSubmitting(true);
                   try {
-                    const cont = await onVictorySubmit?.({ score, answers });
-                    if (cont === false) setIsSubmitting(false);
+                    await onVictorySubmit?.({ score, answers });
+                    setIsSubmitting(false);
                   } catch (e) {
-                    if (isRedirectError(e)) throw e;
+                    if (isRedirectError(e)) {
+                      setIsSubmitting(false);
+                      throw e;
+                    }
                     setIsSubmitting(false);
                   }
                 }}

@@ -182,7 +182,7 @@ export default function JoueurWelcomePage() {
             <Button
               type="button"
               size="lg"
-              onClick={() => router.push("/fr/joueur/stage")}
+              onClick={() => router.push("/fr/joueur/nos-stages")}
               className="w-full py-8 text-xl font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/30 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 transition-all duration-300 hover:shadow-2xl rounded-xl"
             >
               Commencer à jouer
