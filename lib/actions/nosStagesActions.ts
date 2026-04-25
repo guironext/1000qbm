@@ -28,7 +28,7 @@ function stageBookCreateData(
 ) {
   return {
     userId,
-    kind: GameBookKind.STAGE as const,
+    kind: GameBookKind.STAGE,
     targetId: stage.id,
     stageId: stage.id,
     sectionId: firstSection?.id ?? null,
@@ -50,7 +50,7 @@ function stageBookCreateData(
  * Creates the first row with stage/section cursors when none exists.
  */
 export async function ensureNosStagesGameBook(userId: string) {
-  let active = await getActiveStageBook(userId);
+  const active = await getActiveStageBook(userId);
   if (active) return active;
 
   const stageCount = await prisma.stage.count({ where: { langue: Langue.FR } });
@@ -199,11 +199,15 @@ function flattenSectionQuestions(
   return questions;
 }
 
-async function loadSectionWithJeux(sectionId: string) {
+async function loadSectionWithJeux(sectionId: string, stageId: string) {
   return prisma.section.findFirst({
     where: { id: sectionId },
     include: {
       jeux: {
+        where: {
+          sectionId,
+          stageId,
+        },
         orderBy: { numOrder: "asc" },
         include: {
           questions: {
@@ -249,7 +253,7 @@ export async function getNosStagesSectionPlayData(
     redirect(`/fr/joueur/nos-stages/stageId/${stageId}/sections`);
   }
 
-  const section = await loadSectionWithJeux(sectionId);
+  const section = await loadSectionWithJeux(sectionId, stageId);
   if (!section) {
     redirect(`/fr/joueur/nos-stages/stageId/${stageId}/sections`);
   }
@@ -305,7 +309,7 @@ export async function completeNosStagesSection(
     return { ok: false, message: "Section introuvable." };
   }
 
-  const section = await loadSectionWithJeux(sectionId);
+  const section = await loadSectionWithJeux(sectionId, stage.id);
   if (!section) {
     return { ok: false, message: "Section introuvable." };
   }
@@ -429,7 +433,5 @@ export async function completeNosStagesSection(
     },
   });
 
-  redirect(
-    `/fr/joueur/nos-stages/stageId/${stageId}/sectionId/${nextSection.id}`,
-  );
+  redirect(`/fr/joueur/nos-stages/stageId/${stageId}/sections`);
 }
