@@ -36,6 +36,8 @@ interface QuestionFlowProps {
   questions: Question[];
   jeuTitle?: string;
   niveau?: string;
+  /** Slimmer layout when embedded inside a game page shell */
+  embedded?: boolean;
   /** Called after ≥80% success; server should verify answers. Return false to stop loading state. */
   onVictorySubmit?: (
     payload: VictoryPayload,
@@ -47,6 +49,7 @@ export default function QuestionFlow({
   questions,
   jeuTitle,
   niveau,
+  embedded = false,
   onVictorySubmit,
   victoryButtonLabel = "Prochain Jeu",
 }: QuestionFlowProps) {
@@ -88,6 +91,21 @@ export default function QuestionFlow({
     setCurrentIndex((prev) => prev + 1);
   };
 
+  const handleVictoryClick = async () => {
+    if (isSubmitting || !onVictorySubmit) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await onVictorySubmit({ score, answers });
+      if (result === false) {
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      if (isRedirectError(error)) throw error;
+      setIsSubmitting(false);
+    }
+  };
+
   if (questions.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
@@ -101,8 +119,13 @@ export default function QuestionFlow({
     const isDefeat = scorePercentage < 80;    
 
     return (
-      <Card className="overflow-hidden border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm transform transition-all duration-500 animate-in fade-in zoom-in-95">
-        <CardContent className="p-8 md:p-12 flex flex-col items-center text-center space-y-6">
+      <Card
+        className={cn(
+          "w-full overflow-hidden border-0 bg-white/90 shadow-xl backdrop-blur-sm dark:bg-gray-800/90",
+          !embedded && "mx-auto max-w-3xl",
+        )}
+      >
+        <CardContent className="flex flex-col items-center space-y-5 p-6 text-center sm:space-y-6 sm:p-8 md:p-12">
           {isDefeat ? (
             <>
               {/* Defeat Header */}
@@ -243,21 +266,8 @@ export default function QuestionFlow({
 
               <Button
                 className="mt-8 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 px-12 rounded-full shadow-xl transform transition-transform hover:scale-105"
-                disabled={isSubmitting}
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  try {
-                    const ok = await onVictorySubmit?.({ score, answers });
-                    if (ok === false) {
-                      setIsSubmitting(false);
-                    }
-                  } catch (e) {
-                    if (isRedirectError(e)) {
-                      throw e;
-                    }
-                    setIsSubmitting(false);
-                  }
-                }}
+                disabled={isSubmitting || !onVictorySubmit}
+                onClick={handleVictoryClick}
               >
                 {isSubmitting ? "Chargement…" : victoryButtonLabel}{" "}
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -277,40 +287,63 @@ export default function QuestionFlow({
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div
+      className={cn(
+        "w-full space-y-4 sm:space-y-5",
+        !embedded && "mx-auto max-w-3xl",
+      )}
+    >
       <div
         className={cn(
-          "rounded-2xl border border-amber-200/70 dark:border-amber-800/45",
+          "overflow-hidden rounded-2xl border border-amber-200/70 dark:border-amber-800/45",
           "bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50",
           "dark:from-gray-900/80 dark:via-gray-900/70 dark:to-amber-950/25",
           "shadow-sm ring-1 ring-amber-100/60 dark:ring-gray-700/80",
-          "backdrop-blur-sm overflow-hidden",
+          "backdrop-blur-sm",
         )}
       >
-        <div className="flex flex-col gap-4 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-3">
-              <div
-                className="mt-0.5 hidden h-9 w-1 shrink-0 rounded-full bg-gradient-to-b from-amber-400 to-orange-500 sm:block"
-                aria-hidden
-              />
-              <div className="min-w-0">
-                <h2 className="text-base font-bold leading-tight text-gray-900 dark:text-gray-50 sm:text-xl md:text-2xl">
-                  {jeuTitle?.trim() ? jeuTitle : "Questions"}
-                </h2>
-                {niveau ? (
-                  <p className="mt-1.5 inline-flex items-center rounded-full border border-amber-200/80 bg-amber-100/60 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-amber-900/90 dark:border-amber-700/50 dark:bg-amber-950/50 dark:text-amber-200">
-                    {niveau}
-                  </p>
-                ) : null}
+        <div
+          className={cn(
+            "flex flex-col gap-3 p-3 sm:p-4",
+            embedded
+              ? "sm:flex-row sm:items-center sm:justify-between"
+              : "sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5",
+          )}
+        >
+          {!embedded ? (
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-3">
+                <div
+                  className="mt-0.5 hidden h-9 w-1 shrink-0 rounded-full bg-gradient-to-b from-amber-400 to-orange-500 sm:block"
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <h2 className="text-base font-bold leading-tight text-gray-900 dark:text-gray-50 sm:text-xl md:text-2xl">
+                    {jeuTitle?.trim() ? jeuTitle : "Questions"}
+                  </h2>
+                  {niveau ? (
+                    <p className="mt-1.5 inline-flex items-center rounded-full border border-amber-200/80 bg-amber-100/60 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-amber-900/90 dark:border-amber-700/50 dark:bg-amber-950/50 dark:text-amber-200">
+                      {niveau}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
+              Session en cours
+            </p>
+          )}
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+          <div
+            className={cn(
+              "grid grid-cols-2 gap-2",
+              embedded ? "w-full sm:w-auto" : "sm:flex sm:shrink-0 sm:flex-wrap sm:items-center sm:justify-end sm:gap-2",
+            )}
+          >
             <div
               className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-xl px-3",
+                "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl px-3 sm:w-auto",
                 "border border-amber-200/90 bg-white/80 dark:border-amber-700/40 dark:bg-amber-950/40",
                 "shadow-sm",
               )}
@@ -331,7 +364,7 @@ export default function QuestionFlow({
 
             <div
               className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-xl px-3",
+                "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl px-3 sm:w-auto",
                 "border border-gray-200/90 bg-gray-50/90 dark:border-gray-600/60 dark:bg-gray-800/80",
                 "shadow-sm",
               )}
@@ -375,18 +408,18 @@ export default function QuestionFlow({
         key={currentQuestion.id}
         className="animate-in fade-in slide-in-from-right-4 duration-500"
       >
-        <Card className="overflow-hidden border-0 shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm ring-1 ring-gray-200 dark:ring-gray-700">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex items-start gap-4 mb-8">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-md text-lg">
+        <Card className="overflow-hidden border-0 bg-white/90 shadow-lg ring-1 ring-gray-200 backdrop-blur-sm dark:bg-gray-800/90 dark:ring-gray-700">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="mb-6 flex items-start gap-3 sm:mb-8 sm:gap-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-base font-bold text-white shadow-md sm:h-10 sm:w-10 sm:text-lg">
                 {currentIndex + 1}
               </div>
-              <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-1">
+              <h3 className="mt-0.5 text-lg font-semibold leading-snug text-gray-800 dark:text-gray-100 sm:text-xl md:text-2xl">
                 {currentQuestion.intitule}
               </h3>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {currentQuestion.reponses.map((reponse) => {
                 const isSelected = selectedReponseId === reponse.id;
                 const showCorrect = isAnswered && reponse.isCorrect;
@@ -398,7 +431,7 @@ export default function QuestionFlow({
                     key={reponse.id}
                     onClick={() => handleReponseClick(reponse)}
                     className={cn(
-                      "group relative p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between shadow-md shadow-amber-500/20",
+                      "group relative flex min-h-[3.25rem] cursor-pointer items-center justify-between rounded-xl border-2 p-4 shadow-sm transition-all duration-300 sm:p-5 sm:shadow-md sm:shadow-amber-500/20",
                       !isAnswered &&
                         "border-gray-100 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-gray-700/50 hover:shadow-md",
                       isSelected &&
@@ -416,7 +449,7 @@ export default function QuestionFlow({
                   >
                     <p
                       className={cn(
-                        "text-lg font-medium",
+                        "pr-3 text-base font-medium leading-snug sm:text-lg",
                         showCorrect
                           ? "text-green-700 dark:text-green-400"
                           : showIncorrect

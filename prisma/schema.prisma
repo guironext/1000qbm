@@ -30,6 +30,7 @@ model Stage {
   descriptions Paragraphe[]
   jeux         Jeu[]
   gameBooks    GameBook[]
+  gameBoards   GameBoard[]
 }
 
 model Paragraphe {
@@ -57,6 +58,7 @@ model Section {
   stage         Stage?       @relation(fields: [stageId], references: [id])
 
   gameBooks     GameBook[]
+  gameBoardSections GameBoardSection[]
 }
 
 model Jeu {
@@ -112,6 +114,7 @@ model User {
   role       UserRole     @default(JOUEUR)
 
   gameBooks  GameBook[]
+  gameBoards GameBoard[]
 }
 
 /// Per-user game progress: STAGE rows track stage validation / accomplishment;
@@ -148,6 +151,57 @@ model GameBook {
   @@unique([userId, kind, targetId])
   @@index([userId])
 }
+
+/// Per-user gameboard: one row per section with denormalized stage/section display data and progress.
+model GameBoard {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stageId   String
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  
+  stageTitle    String
+  stageNiveau   String
+  stageImage    String
+ 
+  status GameBoardStatus @default(INACTIVE)
+  validated Boolean @default(false)
+
+  gameBoardSections GameBoardSection[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model GameBoardSection {
+  id String @id @default(uuid())
+  gameBoardId String
+  gameBoard GameBoard @relation(fields: [gameBoardId], references: [id])
+  sectionId String
+  section Section @relation(fields: [sectionId], references: [id])
+  sectionTitle String
+  sectionNiveau String
+  sectionImage String
+  
+  sectionAccomplished Boolean @default(false)
+  sectionStatus GameBoardStatus @default(INACTIVE)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gameBoardId])
+  @@index([sectionId])
+}
+
+enum GameBoardStatus {
+  INACTIVE
+  EN_COURS
+  COMPLETED
+}
+
+
 
 enum GameBookStatus {
   EN_COURS

@@ -34,7 +34,11 @@ export default function RootLayout({
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey || ''}>
+    <ClerkProvider
+      publishableKey={publishableKey || ""}
+      signInFallbackRedirectUrl="/fr/joueur"
+      signUpFallbackRedirectUrl="/onboarding"
+    >
       <html lang="fr">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}

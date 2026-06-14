@@ -120,6 +120,7 @@ const OnboardingForm = ({
 
       if (response?.success) {
         console.log("Employee created successfully");
+        await user.reload();
         canRedirect = true;
       }
     } catch (error: unknown) {

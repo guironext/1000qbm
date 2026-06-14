@@ -2,8 +2,6 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -14,6 +12,9 @@ import {
   GraduationCap,
   Gamepad2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GameShell } from "@/components/game/GameShell";
+import { GamePageHeader } from "@/components/game/GameUI";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
@@ -56,21 +57,23 @@ export default function JoueurWelcomePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-[70vh] container mx-auto px-4 py-8 flex flex-col justify-center">
-      <div className="max-w-6xl mx-auto">
-        {/* Image left + Text right */}
-        <div className="flex flex-col md:flex-row items-stretch gap-8 w-full mb-10">
-          {/* Left: Image */}
+    <GameShell maxWidth="6xl" contentClassName="flex flex-col justify-center">
+      <div className="flex flex-col gap-8 lg:gap-10">
+        <div className="grid items-stretch gap-8 lg:grid-cols-2 lg:gap-10">
           <motion.div
-            className="w-full md:w-1/2 relative group"
+            className="relative order-2 lg:order-1"
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
+            <div
+              className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-amber-400/20 to-transparent blur-2xl"
+              aria-hidden
+            />
             <motion.div
-              className="relative aspect-[4/3] md:aspect-square w-full rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20"
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="group relative aspect-[4/3] w-full overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 sm:aspect-[16/10] lg:aspect-square"
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
             >
               <Image
                 src="/picintro.jpg"
@@ -78,25 +81,29 @@ export default function JoueurWelcomePage() {
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                 priority
+                sizes="(max-width: 1024px) 100vw, 540px"
+              />
+              <div
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent"
+                aria-hidden
               />
             </motion.div>
           </motion.div>
 
-          {/* Right: Text content */}
           <motion.div
-            className="w-full md:w-1/2 flex flex-col justify-center"
+            className="order-1 flex flex-col justify-center lg:order-2"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
           >
             <motion.div
-              className="backdrop-blur-md bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-xl border border-white/50 dark:border-gray-700/50 p-8 md:p-10 h-full"
+              className="rounded-3xl border border-white/50 bg-white/90 p-6 shadow-xl backdrop-blur-md dark:border-gray-700/50 dark:bg-gray-800/90 sm:p-8 lg:p-10"
               variants={stagger}
               initial="initial"
               animate="animate"
             >
               <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-medium mb-4"
+                className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
                 variants={fadeInUp}
                 transition={{ duration: 0.4 }}
               >
@@ -104,59 +111,42 @@ export default function JoueurWelcomePage() {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="h-4 w-4" />
                 </motion.span>
                 Bienvenue sur 1000 QBM
               </motion.div>
-              <motion.h1
-                className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight"
-                variants={fadeInUp}
-                transition={{ duration: 0.4 }}
-              >
-                Apprenez la Bible en jouant
-              </motion.h1>
-              <motion.p
-                className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed"
-                variants={fadeInUp}
-                transition={{ duration: 0.4 }}
-              >
-                Découvrez les récits, les personnages et les enseignements de la
-                Bible à travers une aventure ludique et interactive.
-              </motion.p>
+
+              <GamePageHeader
+                title="Apprenez la Bible en jouant"
+                subtitle="Découvrez les récits, les personnages et les enseignements de la Bible à travers une aventure ludique et interactive."
+              />
 
               <motion.h2
-                className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"
+                className="mb-4 mt-6 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl"
                 variants={fadeInUp}
                 transition={{ duration: 0.4 }}
               >
-                <GraduationCap className="w-5 h-5 text-amber-600" />
-                Comment ce jeu vous aide à découvrir la Bible
+                <GraduationCap className="h-5 w-5 text-amber-600" />
+                Comment ce jeu vous aide
               </motion.h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {features.map((item) => (
                   <motion.div
                     key={item.title}
-                    className="flex gap-3"
+                    className="flex gap-3 rounded-2xl border border-amber-100/80 bg-amber-50/40 p-3 dark:border-amber-900/30 dark:bg-amber-950/20"
                     variants={fadeInUp}
                     transition={{ duration: 0.4 }}
-                    whileHover={{ x: 4 }}
+                    whileHover={{ y: -2 }}
                   >
-                    <motion.div
-                      className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center"
-                      whileHover={{
-                        scale: 1.1,
-                        rotate: 5,
-                        transition: { type: "spring", stiffness: 400 },
-                      }}
-                    >
-                      <item.icon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/40">
+                      <item.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                         {item.title}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                      <p className="mt-0.5 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                         {item.desc}
                       </p>
                     </div>
@@ -167,29 +157,28 @@ export default function JoueurWelcomePage() {
           </motion.div>
         </div>
 
-        {/* Button under the content */}
         <motion.div
-          className="flex flex-col items-center"
+          className="flex justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            whileHover={{ scale: 1.03, y: -2 }}
+            whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full max-w-md"
+            className="w-full max-w-lg"
           >
             <Button
               type="button"
               size="lg"
-              onClick={() => router.push("/fr/joueur/nos-stages")}
-              className="w-full py-8 text-xl font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/30 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 transition-all duration-300 hover:shadow-2xl rounded-xl"
+              onClick={() => router.push("/fr/joueur/parcours")}
+              className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 py-7 text-lg font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/30 transition-all duration-300 hover:from-amber-600 hover:to-orange-700 hover:shadow-2xl sm:py-8 sm:text-xl"
             >
               Commencer à jouer
             </Button>
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </GameShell>
   );
 }
