@@ -281,9 +281,9 @@ const OnboardingForm = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="ADMIN">Admin</SelectItem>
+                          
                           <SelectItem value="JOUEUR">Joueur</SelectItem>
-                          <SelectItem value="MANAGER">Manager</SelectItem>
+                          
                         </SelectContent>
                       </Select>
                       <FormMessage />
